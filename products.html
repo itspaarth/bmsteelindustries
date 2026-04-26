@@ -888,6 +888,10 @@ function getImage(name) {
   return imageMap.default;
 }
 
+function normalizeCategory(name) {
+  return (name || '').toString().trim().toLowerCase();
+}
+
 function getCategory(name) {
   const n = (name || '').toLowerCase();
   const cats = {
@@ -903,18 +907,42 @@ function getCategory(name) {
   return 'Architectural Fitting';
 }
 
+function buildCategoryList() {
+  const productCategoryNames = new Set();
+  allProducts.forEach(p => {
+    const categoryName = (p.category || getCategory(p.name)).toString().trim();
+    if (categoryName) productCategoryNames.add(categoryName);
+  });
+
+  const derivedCategories = Array.from(productCategoryNames)
+    .sort((a, b) => a.localeCompare(b))
+    .map(name => ({ id: normalizeCategory(name), name }));
+
+  const mergedCategories = allCategories.slice();
+  derivedCategories.forEach(cat => {
+    if (!mergedCategories.some(existing => normalizeCategory(existing.name) === cat.id)) {
+      mergedCategories.push(cat);
+    }
+  });
+
+  mergedCategories.sort((a, b) => a.name.localeCompare(b.name));
+  return [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
+}
+
 function renderCategories() {
   const categoryList = document.getElementById('categoryList');
   const productCategorySelect = document.getElementById('productCategory');
   const adminCategoryList = document.getElementById('adminCategoryList');
+  const categoriesToRender = buildCategoryList();
+
   if (categoryList) {
-    categoryList.innerHTML = [{ id: 'all', name: 'All Categories' }, ...allCategories].map(c => {
-      const filterKey = c.id === 'all' ? 'all' : c.name.toLowerCase();
+    categoryList.innerHTML = categoriesToRender.map(c => {
+      const filterKey = c.id === 'all' ? 'all' : normalizeCategory(c.name);
       return `<button type="button" class="specular-sweep ${activeCategory === filterKey ? 'active' : ''}" onclick="filterByCategory('${filterKey.replace(/'/g, "\\'")}')">${c.name}</button>`;
     }).join('');
   }
   if (productCategorySelect) {
-    productCategorySelect.innerHTML = `<option value="">Uncategorized</option>${allCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}`;
+    productCategorySelect.innerHTML = `<option value="">Uncategorized</option>${categoriesToRender.slice(1).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}`;
   }
   if (adminCategoryList) {
     adminCategoryList.innerHTML = allCategories.length ? allCategories.map(c => `<span class="admin-chip">${c.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted); font-size:13px;">No categories created yet.</div>';
@@ -949,7 +977,7 @@ window.deleteCategory = async (categoryId, categoryName) => {
   catch (error) { showToast('Failed to delete category.'); }
 };
 
-window.filterByCategory = (categoryName) => { activeCategory = categoryName.toLowerCase(); renderCategories(); filterProducts(); };
+window.filterByCategory = (categoryName) => { activeCategory = normalizeCategory(categoryName); renderCategories(); filterProducts(); };
 
 // ── LOAD PRODUCTS ──
 async function loadProducts() {
@@ -958,6 +986,7 @@ async function loadProducts() {
     allProducts = [];
     snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
     display(allProducts);
+    renderCategories();
   } catch(e) { document.getElementById('products').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Database Unreachable</h3></div>`; }
 }
 
@@ -968,7 +997,7 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = p.category || getCategory(p.name);
+    const categoryLabel = (p.category?.toString().trim() || getCategory(p.name)).trim();
     const imgSrc = p.imageBase64 ? p.imageBase64 : getImage(p.name);
     return `
     <div class="card glass-panel specular-sweep scroll-reveal">
@@ -1001,7 +1030,7 @@ observeElements(); // Initial trigger
 window.filterProducts = () => {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const filtered = allProducts.filter(p => {
-    const categoryLabel = (p.category || getCategory(p.name)).toLowerCase();
+    const categoryLabel = normalizeCategory(p.category || getCategory(p.name));
     const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q);
     const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory;
     return matchesSearch && matchesCategory;
