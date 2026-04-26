@@ -509,12 +509,12 @@
         <div class="contact-card glass-panel specular-sweep scroll-reveal" style="transition-delay: 0.2s;">
           <h3 class="glass-text">Email Address</h3>
           <p>Send us your architectural blueprints or material requirements.</p>
-          <a href="mailto:info@bmsteelindustries.com">info@bmsteelindustries.com</a>
+          <a href="mailto:vikaskhera44@gmail.com">vikaskhera44@gmail.com</a>
         </div>
 
         <div class="contact-card glass-panel specular-sweep scroll-reveal" style="transition-delay: 0.3s;">
           <h3 class="glass-text">Headquarters</h3>
-          <p>123 Industrial Area<br>Delhi, India - 110001</p>
+          <p>#828, gali no. 10, Hansi Road<br>Karnal</p>
         </div>
 
         <div class="contact-card glass-panel specular-sweep scroll-reveal" style="transition-delay: 0.4s;">
@@ -578,8 +578,19 @@
     // Handle Form Submit
     function handleFormSubmit(e) {
       e.preventDefault();
-      showToast('Inquiry sent successfully. We will contact you soon.');
-      document.getElementById('contactForm').reset();
+      const form = document.getElementById('contactForm');
+      const name = form.querySelector('input[type="text"]').value.trim();
+      const email = form.querySelector('input[type="email"]').value.trim();
+      const message = form.querySelector('textarea').value.trim();
+      if (!name || !email || !message) {
+        showToast('Please complete all fields before sending.');
+        return;
+      }
+      const subject = encodeURIComponent('New Message from BM Steel Website');
+      const body = encodeURIComponent(`Name: ${name}%0AEmail: ${email}%0AMessage:%0A${message}`);
+      window.location.href = `mailto:vikaskhera44@gmail.com?subject=${subject}&body=${body}`;
+      showToast('Opening your email client to send the message.');
+      form.reset();
     }
 
     // --- Apple-style Intersection Observer (Reveals) ---
