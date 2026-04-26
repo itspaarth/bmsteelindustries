@@ -253,6 +253,16 @@
     .sidebar-nav { padding: 24px 0; }
     .sidebar-nav a { display: block; padding: 14px 24px; color: var(--text); text-decoration: none; font-weight: 300; letter-spacing: 1px; transition: all 0.3s var(--easing); }
     .sidebar-nav a.active, .sidebar-nav a:hover { background: var(--glass-surface-hover); padding-left: 32px; color: var(--accent); }
+    .sidebar-section-label { display: block; margin: 30px 24px 12px; color: var(--accent); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; text-shadow: 0 0 10px var(--accent-glow); font-family: 'Outfit', sans-serif;}
+    .sidebar-categories { display: flex; flex-direction: column; gap: 8px; padding: 0 24px 24px; }
+    .sidebar-categories a {
+      border: 1px solid transparent; background: transparent; color: var(--text-muted); text-align: left;
+      padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer; transition: all 0.8s var(--easing); font-size: 14px; font-weight: 300; text-decoration: none; display: block;
+    }
+    .sidebar-categories a:hover { 
+      background: var(--glass-surface); color: var(--text); border-color: var(--glass-border); box-shadow: inset 0 0 15px rgba(255,255,255,0.03); 
+      transform: translateX(6px);
+    }
 
     /* Dynamic Theme Cycler Button */
     .theme-cycler {
@@ -476,11 +486,15 @@
       <a href="products.html">Products</a>
       <a href="about.html">About Us</a>
       <a href="contact.html" class="active">Contact</a>
+      <span class="sidebar-section-label">Collections</span>
+      <div class="sidebar-categories" id="categoryList">
+        <a href="products.html?category=all" class="specular-sweep">All Categories</a>
+      </div>
     </nav>
   </div>
 
   <header>
-    <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+    <div class="menu-toggle" onclick="window.toggleSidebar()">☰</div>
     <div class="logo-group" onclick="window.location.href='index.html'">
       <div class="logo-emblem">BM</div>
       <div class="logo-text">
@@ -488,7 +502,7 @@
         <div class="logo-sub">Premium Fittings</div>
       </div>
     </div>
-    <div class="theme-cycler" id="themeCycler" onclick="cycleTheme()" title="Switch Theme">☾</div>
+    <div class="theme-cycler" id="themeCycler" onclick="window.cycleTheme()" title="Switch Theme">☾</div>
   </header>
 
   <main>
@@ -514,7 +528,7 @@
 
         <div class="contact-card glass-panel specular-sweep scroll-reveal" style="transition-delay: 0.3s;">
           <h3 class="glass-text">Headquarters</h3>
-          <p>#828, gali no. 10, Hansi Road<br>Karnal</p>
+          <p>FACT:- #828, gali no. 10, Hansi Road<br>Karnal</p>
         </div>
 
         <div class="contact-card glass-panel specular-sweep scroll-reveal" style="transition-delay: 0.4s;">
@@ -523,7 +537,7 @@
         </div>
       </div>
 
-      <form class="contact-form glass-panel specular-sweep scroll-reveal" id="contactForm" onsubmit="handleFormSubmit(event)" style="transition-delay: 0.2s;">
+      <form class="contact-form glass-panel specular-sweep scroll-reveal" id="contactForm" onsubmit="window.handleFormSubmit(event)" style="transition-delay: 0.2s;">
         <h2 class="glass-text">Send an Inquiry</h2>
         <p>Looking for something specific? Drop us a message and our team will get back to you within 24 hours.</p>
         
@@ -558,8 +572,23 @@
     </div>
   </footer>
 
-  <script>
-    function toggleSidebar() {
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
+      authDomain: "store-6c538.firebaseapp.com",
+      projectId: "store-6c538",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore();
+
+    let allProducts = [];
+    let allCategories = [];
+
+    window.toggleSidebar = () => {
       document.getElementById('sidebar').classList.toggle('open');
     }
 
@@ -567,7 +596,7 @@
     document.getElementById('copyrightYear').textContent = new Date().getFullYear();
 
     // --- Toast Notification ---
-    function showToast(msg) {
+    window.showToast = (msg) => {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className = 'show';
@@ -576,20 +605,20 @@
     }
 
     // Handle Form Submit
-    function handleFormSubmit(e) {
+    window.handleFormSubmit = (e) => {
       e.preventDefault();
       const form = document.getElementById('contactForm');
       const name = form.querySelector('input[type="text"]').value.trim();
       const email = form.querySelector('input[type="email"]').value.trim();
       const message = form.querySelector('textarea').value.trim();
       if (!name || !email || !message) {
-        showToast('Please complete all fields before sending.');
+        window.showToast('Please complete all fields before sending.');
         return;
       }
       const subject = encodeURIComponent('New Message from BM Steel Website');
       const body = encodeURIComponent(`Name: ${name}%0AEmail: ${email}%0AMessage:%0A${message}`);
       window.location.href = `mailto:vikaskhera44@gmail.com?subject=${subject}&body=${body}`;
-      showToast('Opening your email client to send the message.');
+      window.showToast('Opening your email client to send the message.');
       form.reset();
     }
 
@@ -664,6 +693,85 @@
     }
     window.addEventListener('scroll', applyParallax, { passive: true });
     applyParallax();
+
+    // ── FIREBASE SIDEBAR CATEGORIES LOGIC ──
+    function normalizeCategory(name) {
+      return (name || '').toString().trim().toLowerCase();
+    }
+
+    function getCategory(name) {
+      const n = (name || '').toLowerCase();
+      const cats = {
+        'Door Controls': ['closer', 'hydraulic', 'floor spring'],
+        'Modular Systems': ['basket', 'pantry', 'drawer', 'channel', 'tandem', 'kitchen'],
+        'Hinges & Joints': ['hinge', 'lock', 'latch', 'soft-close'],
+        'Sliding Track': ['sliding', 'roller', 'track'],
+        'Cabinet Pulls': ['handle', 'knob', 'pull'],
+      };
+      for (const [cat, keys] of Object.entries(cats)) {
+        if (keys.some(k => n.includes(k))) return cat;
+      }
+      return 'Architectural Fitting';
+    }
+
+    function buildCategoryList() {
+      const productCategoryNames = new Set();
+      allProducts.forEach(p => {
+        const categoryName = (p.category || getCategory(p.name)).toString().trim();
+        if (categoryName) productCategoryNames.add(categoryName);
+      });
+
+      const derivedCategories = Array.from(productCategoryNames)
+        .sort((a, b) => a.localeCompare(b))
+        .map(name => ({ id: normalizeCategory(name), name }));
+
+      const mergedCategories = allCategories.map(c => ({
+        ...c,
+        id: normalizeCategory(c.name)
+      }));
+
+      derivedCategories.forEach(cat => {
+        if (!mergedCategories.some(existing => existing.id === cat.id)) {
+          mergedCategories.push(cat);
+        }
+      });
+
+      return [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
+    }
+
+    function renderCategories() {
+      const categoryList = document.getElementById('categoryList');
+      if (!categoryList) return;
+      
+      const categoriesToRender = buildCategoryList();
+      
+      categoryList.innerHTML = categoriesToRender.map(c => {
+        return `<a href="products.html?category=${encodeURIComponent(c.id)}" class="specular-sweep">${c.name}</a>`;
+      }).join('');
+    }
+
+    async function loadFirebaseData() {
+      try {
+        const [catSnap, prodSnap] = await Promise.all([
+          getDocs(collection(db, 'categories')),
+          getDocs(collection(db, 'products'))
+        ]);
+        
+        allCategories = [];
+        catSnap.forEach(doc => allCategories.push({ id: doc.id, ...doc.data() }));
+        allCategories.sort((a, b) => a.name.localeCompare(b.name));
+
+        allProducts = [];
+        prodSnap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+
+        renderCategories();
+      } catch (error) { 
+        console.error('Failed to load dynamic categories:', error); 
+      }
+    }
+
+    // Trigger Firebase fetch
+    loadFirebaseData();
   </script>
 </body>
 </html>
