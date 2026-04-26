@@ -827,6 +827,7 @@ window.cycleTheme = () => {
 };
 initTheme();
 window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+window.closeSidebar = () => document.getElementById('sidebar').classList.remove('open');
 
 // ── PARALLAX LOGIC ──
 function applyParallax() {
@@ -926,7 +927,9 @@ function buildCategoryList() {
   });
 
   mergedCategories.sort((a, b) => a.name.localeCompare(b.name));
-  return [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
+  const result = [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
+  console.log('buildCategoryList - derived from products:', Array.from(productCategoryNames), '-> normalized:', derivedCategories.map(c => c.id));
+  return result;
 }
 
 function renderCategories() {
@@ -936,10 +939,12 @@ function renderCategories() {
   const categoriesToRender = buildCategoryList();
 
   if (categoryList) {
-    categoryList.innerHTML = categoriesToRender.map(c => {
-      const filterKey = c.id === 'all' ? 'all' : normalizeCategory(c.name);
+    const buttons = categoriesToRender.map(c => {
+      const filterKey = c.id;
+      console.log(`renderCategories: category "${c.name}" -> filterKey "${filterKey}", active: ${activeCategory === filterKey}`);
       return `<button type="button" class="specular-sweep ${activeCategory === filterKey ? 'active' : ''}" onclick="filterByCategory('${filterKey.replace(/'/g, "\\'")}')">${c.name}</button>`;
     }).join('');
+    categoryList.innerHTML = buttons;
   }
   if (productCategorySelect) {
     productCategorySelect.innerHTML = `<option value="">Uncategorized</option>${categoriesToRender.slice(1).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}`;
@@ -977,7 +982,14 @@ window.deleteCategory = async (categoryId, categoryName) => {
   catch (error) { showToast('Failed to delete category.'); }
 };
 
-window.filterByCategory = (categoryName) => { activeCategory = normalizeCategory(categoryName); renderCategories(); filterProducts(); };
+window.filterByCategory = (categoryName) => { 
+  activeCategory = normalizeCategory(categoryName); 
+  console.log('filterByCategory called with:', categoryName, '-> activeCategory:', activeCategory);
+  renderCategories(); 
+  filterProducts();
+  closeSidebar();
+  document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 // ── LOAD PRODUCTS ──
 async function loadProducts() {
@@ -1033,8 +1045,12 @@ window.filterProducts = () => {
     const categoryLabel = normalizeCategory(p.category || getCategory(p.name));
     const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q);
     const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory;
+    if (!matchesCategory && activeCategory !== 'all') {
+      console.log(`Product: ${p.name}, category: "${categoryLabel}", activeCategory: "${activeCategory}", match: ${matchesCategory}`);
+    }
     return matchesSearch && matchesCategory;
   });
+  console.log('filterProducts: activeCategory =', activeCategory, ', filtered count =', filtered.length, 'of', allProducts.length);
   display(filtered);
 };
 
