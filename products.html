@@ -926,6 +926,7 @@ async function loadCategories() {
     const snap = await getDocs(collection(db, 'categories'));
     allCategories = [];
     snap.forEach(doc => allCategories.push({ id: doc.id, ...doc.data() }));
+    allCategories.sort((a, b) => a.name.localeCompare(b.name));
     renderCategories();
   } catch (error) { showToast('Unable to load categories.'); }
 }
@@ -942,7 +943,7 @@ window.createCategory = async () => {
 };
 
 window.deleteCategory = async (categoryId, categoryName) => {
-  if (!user || user.email !== ADMIN_EMAIL) return;
+  if (!user || !isAdminEmail(user.email)) return;
   if (!confirm(`Delete category "${categoryName}"?`)) return;
   try { await deleteDoc(doc(db, 'categories', categoryId)); showToast('Category removed.'); await loadCategories(); } 
   catch (error) { showToast('Failed to delete category.'); }
