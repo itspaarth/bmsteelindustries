@@ -714,13 +714,13 @@ window.login = async () => { try { await signInWithPopup(auth, new GoogleAuthPro
 window.logout = async () => { await signOut(auth); showToast('Signed out securely.'); };
 
 const imageMap = {
-  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80',
-  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=800&q=80',
-  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
-  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
-  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80'
+  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80',
+  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=max&w=800&q=80',
+  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=max&w=800&q=80',
+  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=max&w=800&q=80',
+  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80'
 };
 function getImage(name) {
   const n = (name || '').toLowerCase();
@@ -899,6 +899,8 @@ document.getElementById('imageInput').addEventListener('change', function(e) {
 function resetAdminForm() {
   document.getElementById('name').value = '';
   document.getElementById('price').value = '';
+  const priceToggle = document.getElementById('priceOnRequest');
+  if (priceToggle) { priceToggle.checked = false; document.getElementById('price').disabled = false; }
   document.getElementById('productCategory').value = '';
   updateSubcategoryOptions();
   document.getElementById('productSubcategory').value = '';
