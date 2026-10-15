@@ -410,8 +410,12 @@
         <input class="field-input" id="name" placeholder="e.g. Hydraulic Floor Spring">
       </div>
       <div class="field-group">
-        <label class="field-label">Price (₹)</label>
-        <input class="field-input" id="price" type="number" placeholder="e.g. 2450">
+        <label class="field-label" for="price">Price (₹)</label>
+        <input class="field-input" id="price" type="number" min="0" step="0.01" placeholder="e.g. 2450">
+        <label style="display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--text-muted);font-size:13px;cursor:pointer;">
+          <input id="priceOnRequest" type="checkbox" onchange="togglePriceOnRequest(this.checked)" style="accent-color:var(--accent);width:17px;height:17px;">
+          Set price to “On Request”
+        </label>
       </div>
       <div class="field-group">
         <label class="field-label"><span>Image Upload</span><span style="opacity:0.5; text-transform:none;">Max 800KB</span></label>
@@ -821,10 +825,15 @@ function display(list) {
         <div class="card-category">${categoryLabel}</div>
         <div class="card-name">${p.name}</div>
         <div class="card-footer">
+${p.priceOnRequest ? `
+          <div class="card-price price-on-request">
+            <div class="label">Pricing</div>
+            <div class="val">On Request</div>
+          </div>` : `
           <div class="card-price">
             <div class="label">Unit Price</div>
             <div class="val"><span>₹</span>${Number(p.price).toLocaleString('en-IN')}</div>
-          </div>
+          </div>`}
           <button class="add-btn" onclick='addToCart("${encodedP}")'>+</button>
         </div>
       </div>
@@ -895,9 +904,19 @@ document.getElementById('imageInput').addEventListener('change', function(e) {
 
 
 // ── ADMIN EDIT / SAVE PRODUCT LOGIC ──
+function togglePriceOnRequest(isOnRequest) {
+  const priceInput = document.getElementById('price');
+  priceInput.disabled = isOnRequest;
+  priceInput.required = !isOnRequest;
+  if (isOnRequest) priceInput.value = '';
+  priceInput.placeholder = isOnRequest ? 'Price will be quoted on request' : 'e.g. 2450';
+}
+
 function resetAdminForm() {
   document.getElementById('name').value = '';
   document.getElementById('price').value = '';
+  document.getElementById('priceOnRequest').checked = false;
+  togglePriceOnRequest(false);
   document.getElementById('productCategory').value = '';
   document.getElementById('imageInput').value = '';
   document.getElementById('imageLabelText').textContent = "Select file...";
@@ -917,7 +936,9 @@ window.editProduct = (encodedProductString) => {
   
   // Populate form
   document.getElementById('name').value = p.name;
-  document.getElementById('price').value = p.price;
+  document.getElementById('priceOnRequest').checked = Boolean(p.priceOnRequest);
+  document.getElementById('price').value = p.price ?? '';
+  togglePriceOnRequest(Boolean(p.priceOnRequest));
   document.getElementById('productCategory').value = p.category || '';
   productBase64Image = p.imageBase64 || null; // Retain existing image if present
   
@@ -945,11 +966,17 @@ window.saveProduct = async () => {
   if (!user || !isAdminEmail(user.email)) { showToast('Authorization required.'); return; }
   const name = document.getElementById('name').value.trim();
   const price = document.getElementById('price').value.trim();
+  const priceOnRequest = document.getElementById('priceOnRequest').checked;
   const category = document.getElementById('productCategory').value || '';
-  if (!name || !price) { showToast('Please complete all fields.'); return; }
-  
+  if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) {
+    showToast(priceOnRequest ? 'Please enter a product name.' : 'Please enter a product name and a valid price.');
+    return;
+  }
+
   try {
-    const productData = { name, price: Number(price), category };
+    const productData = { name, category, priceOnRequest };
+    // Keep an existing stored price untouched when switching to quote-based pricing.
+    if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
 
     if (productToEditId) {
@@ -996,13 +1023,16 @@ function renderCartItems() {
   }
   itemsEl.innerHTML = cart.map((item, i) => `
     <div class="cart-item">
-      <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">₹${Number(item.price).toLocaleString('en-IN')}</div></div>
+      <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${item.priceOnRequest ? 'Price on request' : '₹' + Number(item.price).toLocaleString('en-IN')}</div></div>
       <div class="cart-qty-control"><button onclick="updateQty(${i}, -1)">-</button><span>${item.quantity}</span><button onclick="updateQty(${i}, 1)">+</button></div>
       <button class="cart-item-remove" onclick="removeFromCart(${i})" title="Remove">✕</button>
     </div>
   `).join('');
-  const total = cart.reduce((s, i) => s + (Number(i.price) * i.quantity), 0);
-  summaryEl.innerHTML = `<div class="cart-row total"><span>Total Estimate</span><span class="total-price">₹${total.toLocaleString('en-IN')}</span></div>`;
+  const hasQuoteItems = cart.some(item => item.priceOnRequest);
+  const total = cart.reduce((s, i) => s + (i.priceOnRequest ? 0 : Number(i.price) * i.quantity), 0);
+  summaryEl.innerHTML = hasQuoteItems
+    ? `<div class="cart-row total"><span>Final pricing</span><span class="total-price">On Request</span></div><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Our team will confirm pricing for items marked “On Request”.</p>`
+    : `<div class="cart-row total"><span>Total Estimate</span><span class="total-price">₹${total.toLocaleString('en-IN')}</span></div>`;
   customerForm.classList.add('visible'); checkoutBtn.disabled = false;
 }
 
@@ -1014,9 +1044,16 @@ window.checkout = () => {
   msg += `👤 *Client:* ${name}%0A📞 *Phone:* ${phone}%0A📍 *Delivery:* ${address}%0A`;
   if (user) msg += `✉️ *Email:* ${user.email}%0A`;
   msg += `📅 *Date:* ${new Date().toLocaleDateString('en-IN')}%0A━━━━━━━━━━━━━━━━━━━━%0A`;
-  cart.forEach((p) => { msg += `• ${p.quantity}x ${p.name} — ₹${(Number(p.price) * p.quantity).toLocaleString('en-IN')}%0A`; });
-  const total = cart.reduce((s,i) => s + (Number(i.price) * i.quantity), 0);
-  msg += `━━━━━━━━━━━━━━━━━━━━%0A✅ *TOTAL ESTIMATE:* ₹${total.toLocaleString('en-IN')}`;
+  cart.forEach((p) => {
+    const linePrice = p.priceOnRequest ? 'Price on request' : '₹' + (Number(p.price) * p.quantity).toLocaleString('en-IN');
+    msg += `• ${p.quantity}x ${p.name} — ${linePrice}%0A`;
+  });
+  if (cart.some(p => p.priceOnRequest)) {
+    msg += `━━━━━━━━━━━━━━━━━━━━%0Aℹ️ *FINAL PRICING:* To be confirmed by BM Steel Industries`;
+  } else {
+    const total = cart.reduce((s,i) => s + (Number(i.price) * i.quantity), 0);
+    msg += `━━━━━━━━━━━━━━━━━━━━%0A✅ *TOTAL ESTIMATE:* ₹${total.toLocaleString('en-IN')}`;
+  }
   window.open(`https://wa.me/919215600406?text=${msg}`);
 };
 </script>
