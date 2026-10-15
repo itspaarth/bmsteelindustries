@@ -212,10 +212,10 @@
     .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: clamp(24px, 4vw, 40px); padding: 0 clamp(16px, 4vw, 60px) clamp(80px, 12vh, 120px); position: relative; z-index: 10; }
     .card { border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.8s var(--easing), border-radius 0.8s var(--easing); position: relative; display: flex; flex-direction: column; }
     .card:hover { transform: translateY(-12px) scale(1.02); box-shadow: var(--shadow-glow); z-index: 2; border-color: var(--accent); }
-    .card-img-wrap { position: relative; overflow: hidden; aspect-ratio: 1 / 1; background: rgba(0,0,0,0.2); padding: 16px; }
-    body.theme-light .card-img-wrap { background: rgba(0,0,0,0.03); }
-    .card img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); transition: transform 1.2s var(--easing), filter 1.2s var(--easing), border-radius 0.8s var(--easing); filter: contrast(0.95) brightness(0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .card:hover img { transform: scale(1.08); filter: contrast(1.1) brightness(1.1); }
+    .card-img-wrap { position:relative; overflow:hidden; aspect-ratio:4/3; min-height:220px; background:rgba(0,0,0,.2); padding:14px; display:flex; align-items:center; justify-content:center; }
+    body.theme-light .card-img-wrap { background:rgba(0,0,0,.03); }
+    .card-img-wrap > img { display:block; flex:0 1 auto; width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; object-position:center; border-radius:var(--radius-md); transition:filter .22s ease; filter:contrast(.98) brightness(.98); box-shadow:none; }
+    .card:hover img { filter:contrast(1.02) brightness(1.03); }
     .card-badge { position: absolute; top: 24px; left: 24px; z-index: 2; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-family: 'Outfit', sans-serif; padding: 8px 16px; background: var(--glass-surface); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--glass-border-light); border-radius: var(--radius-pill); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: border-radius 0.8s var(--easing); }
 
     .admin-delete-btn { position: absolute; top: 24px; right: 24px; z-index: 3; background: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.5); border-radius: 50%; width: 40px; height: 40px; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; opacity: 0; transform: scale(0.8); transition: all 0.4s var(--easing); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
@@ -344,6 +344,37 @@
     @media (max-width: 1100px) { header { padding: 0 clamp(16px, 4vw, 40px); } .hero-revolve { height: clamp(520px, 75vh, 780px); } .cube-scene { --cube-size: clamp(240px, 38vw, 360px); } .products, .about-wrapper, .contact-wrapper { padding-left: clamp(16px, 4vw, 24px); padding-right: clamp(16px, 4vw, 24px); } .footer { padding: clamp(32px, 6vh, 60px) clamp(24px, 5vw, 40px); } }
     @media (max-width: 900px) { header { flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; height: auto; } .header-right { width: 100%; justify-content: space-between; flex-wrap: wrap; } .sidebar { width: min(100%, 340px); max-width: 100%; } .hero-revolve { height: clamp(460px, 60vh, 620px); } .cube-scene { --cube-size: clamp(220px, 42vw, 320px); } .products { padding: 0 clamp(16px, 4vw, 24px) clamp(80px, 12vh, 100px); } .about-wrapper, .contact-wrapper { grid-template-columns: 1fr; gap: clamp(24px, 4vw, 36px); } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-right { justify-content: center; width: 100%; } .admin-body, .contact-details, .metrics-grid { grid-template-columns: 1fr !important; } .card-body { padding: clamp(18px, 3vw, 28px); } .card-img-wrap { padding: 12px; } .cart-item { flex-wrap: wrap; gap: 14px; } .cart-item-info { width: 100%; flex: none; } #cartDrawer { width: 100%; max-width: 100%; } }
     @media (max-width: 600px) { header { padding: clamp(12px, 3vw, 18px); } .logo-text, .logo-group { gap: 10px; } .logo-sub { display: none; } .section-header { padding: clamp(12px, 3vw, 18px); } .products { gap: clamp(18px, 4vw, 24px); } .card { border-radius: clamp(16px, 3vw, 20px); } .cart-item-remove { width: 100%; } .contact-card, .contact-form, .metric-card, .card { width: 100%; } .admin-header { align-items: flex-start; } }
+    @media (max-width:900px) {
+      .products { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+      .card-img-wrap { min-height:0; aspect-ratio:4/3; padding:10px; }
+      .card-body { padding:16px; }
+      .card-name { font-size:clamp(15px,2.4vw,20px); margin-bottom:18px; overflow-wrap:anywhere; }
+      .card-category { letter-spacing:1.5px; }
+      .card-price .val { font-size:clamp(18px,3vw,26px); }
+      .card-badge { top:10px; left:10px; padding:5px 8px; letter-spacing:1px; }
+      .admin-edit-btn,.admin-delete-btn { opacity:1; transform:none; width:34px; height:34px; top:10px; }
+      .admin-edit-btn { right:52px; } .admin-delete-btn { right:10px; }
+      .cart-fab { height:54px; padding:0 18px; letter-spacing:1px; }
+      #cartTrigger { right:14px; bottom:16px; } #cartDrawer { width:100%; border-left:0; }
+      .cart-header,.cart-footer { padding:18px; } .cart-items { padding:8px 18px; }
+      .field-input,.customer-details input,.customer-details textarea { min-width:0; font-size:16px; }
+      .admin-body { padding:18px; gap:16px; } .admin-header { padding:18px; }
+      .search-section { padding-inline:16px; }
+    }
+    @media (max-width:520px) {
+      header { gap:12px; } .logo-main { font-size:clamp(14px,4vw,18px); } .header-right { gap:10px; }
+      .products { grid-template-columns:minmax(0,1fr); padding-inline:14px; gap:18px; }
+      .card { min-width:0; } .card-img-wrap { aspect-ratio:5/3; }
+      .card-img-wrap > img { max-width:100%; max-height:100%; }
+      .card-body { padding:18px; } .card-name { font-size:19px; margin-bottom:16px; }
+      .card-footer { align-items:center; gap:12px; } .section-header { align-items:flex-start; gap:12px; }
+      .product-count { letter-spacing:1px; text-align:right; }
+      .hero-revolve { min-height:430px; } .cube-scene { --cube-size:min(76vw,280px); }
+      .cart-row.total { letter-spacing:1px; gap:12px; } .cart-row.total .total-price { font-size:24px; }
+      .checkout-btn { letter-spacing:1px; }
+      #toast { width:calc(100% - 32px); white-space:normal; padding:12px 16px; font-size:12px; }
+      .admin-body > * { min-width:0; } .admin-body .btn { width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -442,7 +473,8 @@
     </div>
     <div class="field-group">
       <label class="field-label">Price (₹)</label>
-      <input class="field-input" id="price" type="number" placeholder="e.g. 2450">
+      <input class="field-input" id="price" type="number" min="0" step="0.01" placeholder="e.g. 2450">
+      <label style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:13px;cursor:pointer;"><input id="priceOnRequest" type="checkbox" onchange="document.getElementById('price').disabled=this.checked;if(this.checked)document.getElementById('price').value='';"> Set price to “On Request”</label>
     </div>
     <div class="field-group">
       <label class="field-label"><span>Image Upload</span><span style="opacity:0.5; text-transform:none;">Max 800KB</span></label>
@@ -453,13 +485,20 @@
     </div>
     <div class="field-group">
       <label class="field-label">Product Category</label>
-      <select class="field-input" id="productCategory">
-        <option value="">Uncategorized</option>
-      </select>
+      <select class="field-input" id="productCategory" onchange="updateSubcategoryOptions()"><option value="">Uncategorized</option></select>
     </div>
     <div class="field-group">
-      <label class="field-label">Create New Category</label>
+      <label class="field-label">Create Main Category</label>
       <input class="field-input" id="newCategoryName" placeholder="e.g. Hinges & Joints">
+      <button class="btn btn-ghost specular-sweep" type="button" onclick="createCategory()">Create Main Category</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Subcategory</label>
+      <select class="field-input" id="productSubcategory"><option value="">No subcategory</option></select>
+      <label class="field-label">Create Subcategory</label>
+      <select class="field-input" id="newSubcategoryParent"><option value="">Choose main category</option></select>
+      <input class="field-input" id="newSubcategoryName" placeholder="e.g. Soft-Close Hinges">
+      <button class="btn btn-ghost specular-sweep" type="button" onclick="createSubcategory()">Create Subcategory</button>
     </div>
     <div class="field-group" style="grid-column: 1 / -1;">
       <label class="field-label">Existing Categories</label>
@@ -545,7 +584,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -705,65 +744,76 @@ function getCategory(name) {
 }
 
 function buildCategoryList() {
-  const productCategoryNames = new Set();
-  allProducts.forEach(p => {
-    const categoryName = (p.category || getCategory(p.name)).toString().trim();
-    if (categoryName) productCategoryNames.add(categoryName);
+  const names = new Set();
+  allProducts.forEach(p => { const name = (p.category || getCategory(p.name)).trim(); if (name) names.add(name); });
+  const merged = allCategories.map(cat => ({ ...cat, id: normalizeCategory(cat.name) }));
+  Array.from(names).sort((a,b)=>a.localeCompare(b)).forEach(name => {
+    if (!merged.some(cat => !cat.parentCategory && cat.name.toLowerCase() === name.toLowerCase())) merged.push({ id: normalizeCategory(name), name });
   });
-
-  const derivedCategories = Array.from(productCategoryNames)
-    .sort((a, b) => a.localeCompare(b))
-    .map(name => ({ id: normalizeCategory(name), name }));
-
-  const mergedCategories = allCategories.map(c => ({
-    ...c,
-    id: normalizeCategory(c.name)
-  }));
-
-  derivedCategories.forEach(cat => {
-    if (!mergedCategories.some(existing => existing.id === cat.id)) mergedCategories.push(cat);
-  });
-
-  return [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
+  return [{ id:'all', name:'All Categories' }, ...merged];
 }
-
 function renderCategories() {
   const categoryList = document.getElementById('categoryList');
-  const productCategorySelect = document.getElementById('productCategory');
+  const categorySelect = document.getElementById('productCategory');
+  const parentSelect = document.getElementById('newSubcategoryParent');
   const adminCategoryList = document.getElementById('adminCategoryList');
-  const categoriesToRender = buildCategoryList();
-
-  if (categoryList) {
-    categoryList.innerHTML = categoriesToRender.map(c => `<a href="products.html?category=${encodeURIComponent(c.id)}" class="specular-sweep">${c.name}</a>`).join('');
+  const mainCats = buildCategoryList().slice(1).filter(cat => !cat.parentCategory);
+  const subs = allCategories.filter(cat => cat.parentCategory);
+  if (categoryList) categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep">All Categories</a>` + mainCats.map(cat =>
+    `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep">${cat.name}</a>` +
+    subs.filter(sub => sub.parentCategory.toLowerCase() === cat.name.toLowerCase()).map(sub =>
+      `<a href="products.html?subcategory=${encodeURIComponent(normalizeCategory(sub.name))}" class="specular-sweep" style="padding-left:28px;font-size:12px;">↳ ${sub.name}</a>`).join('')
+  ).join('');
+  if (categorySelect) {
+    const current = categorySelect.value;
+    categorySelect.innerHTML = `<option value="">Uncategorized</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
+    if (mainCats.some(cat=>cat.name===current)) categorySelect.value=current;
+    updateSubcategoryOptions();
   }
-  if (productCategorySelect) {
-    productCategorySelect.innerHTML = `<option value="">Uncategorized</option>${categoriesToRender.slice(1).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}`;
+  if (parentSelect) {
+    const current = parentSelect.value;
+    parentSelect.innerHTML = `<option value="">Choose main category</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
+    if (mainCats.some(cat=>cat.name===current)) parentSelect.value=current;
   }
-  if (adminCategoryList) {
-    adminCategoryList.innerHTML = allCategories.length ? allCategories.map(c => `<span class="admin-chip">${c.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted); font-size:13px;">No categories created yet.</div>';
-  }
+  if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat =>
+    `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') :
+    '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
 }
-
+function updateSubcategoryOptions(selectedValue = '') {
+  const select = document.getElementById('productSubcategory');
+  const parent = document.getElementById('productCategory')?.value || '';
+  if (!select) return;
+  const options = allCategories.filter(cat => cat.parentCategory && cat.parentCategory.toLowerCase() === parent.toLowerCase());
+  select.innerHTML = `<option value="">No subcategory</option>${options.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
+  if (options.some(cat=>cat.name===selectedValue)) select.value=selectedValue;
+}
 async function loadCategories() {
   try {
-    const snap = await getDocs(collection(db, 'categories'));
+    const snap = await getDocs(collection(db,'categories'));
     allCategories = [];
-    snap.forEach(doc => allCategories.push({ id: doc.id, ...doc.data() }));
+    snap.forEach(docSnap=>allCategories.push({id:docSnap.id,...docSnap.data()}));
+    allCategories.sort((a,b)=>(a.parentCategory||'').localeCompare(b.parentCategory||'')||a.name.localeCompare(b.name));
     renderCategories();
-  } catch (error) { showToast('Unable to load categories.'); }
+  } catch(error) { showToast('Unable to load categories.'); }
 }
 
 window.createCategory = async () => {
   if (!user || !isAdminEmail(user.email)) { showToast('Admin authorization required.'); return; }
   const name = document.getElementById('newCategoryName').value.trim();
   if (!name) { showToast('Enter a category name.'); return; }
-  if (allCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { showToast('Category exists.'); return; }
-  try {
-    await addDoc(collection(db, 'categories'), { name, createdAt: new Date() });
-    document.getElementById('newCategoryName').value = ''; showToast('Category created.'); await loadCategories();
-  } catch (error) { showToast('Failed to create category.'); }
+  if (allCategories.some(cat=>!cat.parentCategory&&cat.name.toLowerCase()===name.toLowerCase())) { showToast('Category exists.'); return; }
+  try { await addDoc(collection(db,'categories'),{name,createdAt:new Date()}); document.getElementById('newCategoryName').value=''; showToast('Main category created.'); await loadCategories(); }
+  catch(error) { showToast('Failed to create category.'); }
 };
-
+window.createSubcategory = async () => {
+  if (!user || !isAdminEmail(user.email)) { showToast('Admin authorization required.'); return; }
+  const parentCategory = document.getElementById('newSubcategoryParent').value;
+  const name = document.getElementById('newSubcategoryName').value.trim();
+  if (!parentCategory || !name) { showToast('Choose a main category and enter a subcategory name.'); return; }
+  if (allCategories.some(cat=>cat.parentCategory&&cat.parentCategory.toLowerCase()===parentCategory.toLowerCase()&&cat.name.toLowerCase()===name.toLowerCase())) { showToast('Subcategory already exists under this category.'); return; }
+  try { await addDoc(collection(db,'categories'),{name,parentCategory,isSubcategory:true,createdAt:new Date()}); document.getElementById('newSubcategoryName').value=''; showToast('Subcategory created.'); await loadCategories(); }
+  catch(error) { showToast('Failed to create subcategory.'); }
+};
 window.deleteCategory = async (categoryId, categoryName) => {
   if (!user || !isAdminEmail(user.email)) return;
   if (!confirm(`Permanently delete category "${categoryName}"?`)) return;
@@ -787,8 +837,8 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = p.category || getCategory(p.name);
-    const imgSrc = p.imageBase64 ? p.imageBase64 : getImage(p.name);
+    const categoryLabel = [p.category || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ');
+    const imgSrc = p.imageBase64 || p.imageUrl || getImage(p.name);
     
     // Safely encode product properties for HTML injection
     const encodedP = encodeURIComponent(JSON.stringify(p));
@@ -801,16 +851,13 @@ function display(list) {
           <button class="admin-edit-btn" onclick='editProduct("${encodedP}")' title="Edit Item">✎</button>
           <button class="admin-delete-btn" onclick='confirmDelete("${p.id}", "${p.name.replace(/'/g, "\\'")}")' title="Remove Item">✕</button>
         ` : ''}
-        <img src="${imgSrc}" alt="${p.name}" loading="lazy" onerror="this.src='${imageMap.default}'">
+        <img src="${imgSrc}" alt="${p.name.replace(/"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${imageMap.default}'">
       </div>
       <div class="card-body">
         <div class="card-category">${categoryLabel}</div>
         <div class="card-name">${p.name}</div>
         <div class="card-footer">
-          <div class="card-price">
-            <div class="label">Unit Price</div>
-            <div class="val"><span>₹</span>${Number(p.price).toLocaleString('en-IN')}</div>
-          </div>
+${p.priceOnRequest ? `<div class="card-price"><div class="label">Pricing</div><div class="val">On Request</div></div>` : `<div class="card-price"><div class="label">Unit Price</div><div class="val"><span>₹</span>${Number(p.price).toLocaleString('en-IN')}</div></div>`}
           <button class="add-btn" onclick='addToCart("${encodedP}")'>+</button>
         </div>
       </div>
@@ -828,8 +875,9 @@ window.filterProducts = () => {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const filtered = allProducts.filter(p => {
     const categoryLabel = (p.category || getCategory(p.name)).toLowerCase();
-    const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q);
-    const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory;
+    const subcategoryLabel = (p.subcategory || '').toLowerCase();
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q) || subcategoryLabel.includes(q);
+    const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory || subcategoryLabel === activeCategory;
     return matchesSearch && matchesCategory;
   });
   display(filtered);
@@ -852,6 +900,8 @@ function resetAdminForm() {
   document.getElementById('name').value = '';
   document.getElementById('price').value = '';
   document.getElementById('productCategory').value = '';
+  updateSubcategoryOptions();
+  document.getElementById('productSubcategory').value = '';
   document.getElementById('imageInput').value = '';
   document.getElementById('imageLabelText').textContent = "Select file...";
   document.getElementById('imageLabelText').style.color = "var(--text-muted)";
@@ -870,8 +920,11 @@ window.editProduct = (encodedProductString) => {
   
   // Populate form
   document.getElementById('name').value = p.name;
-  document.getElementById('price').value = p.price;
+  document.getElementById('price').value = p.price ?? '';
+  const priceToggle = document.getElementById('priceOnRequest');
+  if (priceToggle) { priceToggle.checked = Boolean(p.priceOnRequest); document.getElementById('price').disabled = Boolean(p.priceOnRequest); }
   document.getElementById('productCategory').value = p.category || '';
+  updateSubcategoryOptions(p.subcategory || '');
   productBase64Image = p.imageBase64 || null; // Retain existing image if present
   
   if (productBase64Image) {
@@ -899,10 +952,12 @@ window.saveProduct = async () => {
   const name = document.getElementById('name').value.trim();
   const price = document.getElementById('price').value.trim();
   const category = document.getElementById('productCategory').value || '';
-  if (!name || !price) { showToast('Please complete all fields.'); return; }
-  
+  const subcategory = document.getElementById('productSubcategory').value || '';
+  const priceOnRequest = document.getElementById('priceOnRequest')?.checked || false;
+  if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) { showToast('Enter a product name and a valid price, or choose On Request.'); return; }
   try {
-    const productData = { name, price: Number(price), category };
+    const productData = { name, category, subcategory, priceOnRequest };
+    if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
 
     if (productToEditId) {
