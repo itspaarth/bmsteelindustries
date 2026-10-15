@@ -186,9 +186,10 @@
     .card { border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease; position: relative; display: flex; flex-direction: column; }
     .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); z-index: 2; border-color: var(--accent); }
 
-    .card-img-wrap { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: rgba(0,0,0,0.2); padding: 14px; display: flex; align-items: center; justify-content: center; }
+    .card-img-wrap { position: relative; overflow: hidden; aspect-ratio: 4 / 3; min-height: 240px; background: rgba(0,0,0,0.2); padding: 14px; display: flex; align-items: center; justify-content: center; }
     body.theme-light .card-img-wrap { background: rgba(0,0,0,0.03); }
-    .card img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; border-radius: var(--radius-md); transition: filter 0.25s ease; filter: contrast(0.98) brightness(0.98); }
+    /* Preserve each product image's original aspect ratio; never crop to fill the card. */
+    .card-img-wrap > img { display: block; flex: 0 1 auto; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; border-radius: var(--radius-md); transition: filter 0.25s ease; filter: contrast(0.98) brightness(0.98); }
     .card:hover img { filter: contrast(1.02) brightness(1.03); }
     .card:has(.card-selection:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
     .card-selection { position: absolute; right: 18px; bottom: 18px; z-index: 4; width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0,0,0,.45)); }
@@ -645,13 +646,13 @@ window.logout = async () => { await signOut(auth); showToast('Signed out securel
 
 // ── PRODUCT IMAGE MAP (PREMIUM FALLBACKS) ──
 const imageMap = {
-  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80',
-  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=800&q=80',
-  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
-  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
-  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80'
+  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80',
+  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=max&w=800&q=80',
+  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=max&w=800&q=80',
+  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=max&w=800&q=80',
+  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80'
 };
 
 function getImage(name) {
