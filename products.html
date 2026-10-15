@@ -807,9 +807,7 @@ async function loadProducts() {
     allProducts = [];
     snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
     display(allProducts);
-    if (categoryParam) {
-      filterProducts();
-    }
+    if (categoryParam || subcategoryParam) filterProducts();
     renderCategories();
   } catch(e) { document.getElementById('products').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Database Unreachable</h3></div>`; }
 }
@@ -907,6 +905,90 @@ window.filterProducts = () => {
     return matchesSearch && matchesCategory;
   });
   display(filtered);
+};
+
+// Bulk CSV product import (admin only). CSV supports quoted fields and commas.
+let pendingBulkProducts = [];
+function parseProductCsv(text) {
+  const rows=[]; let row=[], field='', quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'&&quoted&&next==='"'){field+='"';i++;}
+    else if(ch==='"'){quoted=!quoted;}
+    else if(ch===','&&!quoted){row.push(field.trim());field='';}
+    else if((ch==='\n'||ch==='\r')&&!quoted){
+      if(ch==='\r'&&next==='\n')i++;
+      row.push(field.trim());field='';
+      if(row.some(value=>value!==''))rows.push(row);
+      row=[];
+    } else field+=ch;
+  }
+  if(field.length||row.length){row.push(field.trim());if(row.some(value=>value!==''))rows.push(row);}
+  if(quoted)throw new Error('CSV has an unclosed quote.');
+  if(!rows.length)return [];
+  const headers=rows.shift().map(h=>h.replace(/^\uFEFF/,'').toLowerCase().replace(/[\s-]+/g,''));
+  if(!headers.includes('name'))throw new Error('CSV must include a name column. Download the template for the full format.');
+  return rows.map((values,index)=>{
+    const data={};headers.forEach((header,i)=>data[header]=values[i]||'');
+    const name=(data.name||'').trim();
+    if(!name)throw new Error('Row '+(index+2)+' is missing a product name.');
+    const priceOnRequest=['true','yes','1'].includes((data.priceonrequest||'').toLowerCase());
+    const priceText=(data.price||'').trim();
+    if(!priceOnRequest&&(!priceText||!Number.isFinite(Number(priceText))||Number(priceText)<0))throw new Error('Row '+(index+2)+' needs a valid price or priceOnRequest=true.');
+    const imageUrl=(data.imageurl||'').trim();
+    if(imageUrl){let parsed;try{parsed=new URL(imageUrl);}catch{throw new Error('Row '+(index+2)+' has an invalid imageUrl.');}if(!['https:','http:'].includes(parsed.protocol))throw new Error('Row '+(index+2)+' imageUrl must use HTTP or HTTPS.');}
+    return {name,priceOnRequest,price:priceOnRequest?null:Number(priceText),category:(data.category||'').trim(),subcategory:(data.subcategory||'').trim(),imageUrl};
+  });
+}
+window.downloadBulkCsvTemplate = () => {
+  const csv='name,price,category,subcategory,priceOnRequest,imageUrl\n"Sample cabinet handle",2450,"Cabinet Pulls","Modern Handles",false,https://example.com/product.jpg\n"Custom fitting",,"Door Controls","Special Orders",true,';
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='bm-steel-products-template.csv';a.click();URL.revokeObjectURL(url);
+};
+window.previewBulkCsv = async (file) => {
+  pendingBulkProducts=[];document.getElementById('bulkImportBtn').disabled=true;
+  const preview=document.getElementById('bulkCsvPreview');
+  if(!file){document.getElementById('bulkCsvLabel').textContent='Choose product CSV…';preview.textContent='';return;}
+  document.getElementById('bulkCsvLabel').textContent=file.name;
+  if(file.size>2*1024*1024){preview.textContent='CSV must be smaller than 2 MB.';return;}
+  try{
+    pendingBulkProducts=parseProductCsv(await file.text());
+    if(!pendingBulkProducts.length)throw new Error('CSV contains no product rows.');
+    if(pendingBulkProducts.length>350)throw new Error('Please import at most 350 products per file.');
+    if(pendingBulkProducts.some(p=>p.subcategory&&!p.category))throw new Error('Every subcategory needs a main category in the same row.');
+    preview.textContent='Ready to import '+pendingBulkProducts.length+' products. Review the CSV before importing.';
+    document.getElementById('bulkImportBtn').disabled=false;
+  }catch(error){pendingBulkProducts=[];preview.textContent=error.message||'Could not read this CSV.';}
+};
+window.importBulkProducts = async () => {
+  if(!user||!isAdminEmail(user.email)){showToast('Admin authorization required.');return;}
+  if(!pendingBulkProducts.length){showToast('Choose and preview a valid CSV first.');return;}
+  const button=document.getElementById('bulkImportBtn');button.disabled=true;
+  try{
+    const mainByName=new Map(),subByKey=new Map();
+    allCategories.forEach(cat=>{if(cat.parentCategory)subByKey.set(cat.parentCategory.toLowerCase()+'::'+cat.name.toLowerCase(),cat);else mainByName.set(cat.name.toLowerCase(),cat);});
+    const missingMains=new Map(),missingSubs=new Map();
+    pendingBulkProducts.forEach(p=>{
+      if(p.category&&!mainByName.has(p.category.toLowerCase())&&!missingMains.has(p.category.toLowerCase()))missingMains.set(p.category.toLowerCase(),p.category);
+      if(p.category&&p.subcategory&&!subByKey.has(p.category.toLowerCase()+'::'+p.subcategory.toLowerCase()))missingSubs.set(p.category.toLowerCase()+'::'+p.subcategory.toLowerCase(),{name:p.subcategory,parentCategory:p.category});
+    });
+    if(pendingBulkProducts.length+missingMains.size+missingSubs.size>450)throw new Error('This import exceeds the safe batch size. Split the CSV into smaller files.');
+    const batch=writeBatch(db);
+    missingMains.forEach(name=>{const ref=doc(collection(db,'categories'));batch.set(ref,{name,createdAt:new Date()});mainByName.set(name.toLowerCase(),{id:ref.id,name});});
+    missingSubs.forEach((sub,key)=>{const ref=doc(collection(db,'categories'));batch.set(ref,{...sub,isSubcategory:true,createdAt:new Date()});subByKey.set(key,{id:ref.id,...sub});});
+    pendingBulkProducts.forEach(product=>{
+      const ref=doc(collection(db,'products'));
+      const data={name:product.name,category:product.category,subcategory:product.subcategory,priceOnRequest:product.priceOnRequest,price:product.priceOnRequest?0:product.price};
+      if(product.imageUrl)data.imageUrl=product.imageUrl;
+      batch.set(ref,data);
+    });
+    await batch.commit();
+    const count=pendingBulkProducts.length;pendingBulkProducts=[];
+    document.getElementById('bulkCsvInput').value='';document.getElementById('bulkCsvLabel').textContent='Choose product CSV…';
+    document.getElementById('bulkCsvPreview').textContent='Imported '+count+' products successfully.';
+    await Promise.all([loadProducts(),loadCategories()]);showToast(count+' products imported.');
+  }catch(error){document.getElementById('bulkCsvPreview').textContent='Import failed: '+(error.message||'Unknown error');showToast('Import failed. No partial batch was applied.');}
+  finally{button.disabled=!pendingBulkProducts.length;}
 };
 
 // Image Upload
