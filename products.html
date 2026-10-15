@@ -333,7 +333,70 @@
       .scroll-reveal { opacity: 1; transform: none; }
     }
     @media (max-width: 600px) { .bulk-toolbar { align-items: stretch; } .bulk-toolbar-actions { width: 100%; } .bulk-toolbar-actions .btn { flex: 1; white-space: normal; } }
-  </style>
+    @media (max-width:900px) {
+      .products { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+      .card-img-wrap { aspect-ratio:4/3; min-height:0; padding:10px; }
+      .card-body { padding:16px; } .card-name { font-size:clamp(15px,2.4vw,20px); margin-bottom:18px; overflow-wrap:anywhere; }
+      .card-category { letter-spacing:1.5px; } .card-price .val { font-size:clamp(18px,3vw,26px); }
+      .card-badge { top:10px; left:10px; padding:5px 8px; letter-spacing:1px; }
+      .admin-edit-btn,.admin-delete-btn { opacity:1; transform:none; width:34px; height:34px; top:10px; }
+      .admin-edit-btn { right:52px; } .admin-delete-btn { right:10px; }
+      .cart-fab { height:54px; padding:0 18px; letter-spacing:1px; } #cartTrigger { right:14px; bottom:16px; }
+      #cartDrawer { width:100%; border-left:0; } .cart-header,.cart-footer { padding:18px; } .cart-items { padding:8px 18px; }
+      .field-input,.customer-details input,.customer-details textarea { min-width:0; font-size:16px; }
+      .admin-body { padding:18px; gap:16px; } .admin-header { padding:18px; }
+      .bulk-toolbar { margin-inline:14px; padding:14px; } .bulk-import-panel { margin-inline:14px !important; padding:14px !important; }
+    }
+    @media (max-width:520px) {
+      header { gap:12px; } .logo-main { font-size:clamp(14px,4vw,18px); } .header-right { gap:10px; }
+      .products { grid-template-columns:minmax(0,1fr); padding-inline:14px; gap:18px; } .card { min-width:0; }
+      .card-img-wrap { aspect-ratio:5/3; } .card-img-wrap > img { max-width:100%; max-height:100%; }
+      .card-body { padding:18px; } .card-name { font-size:19px; margin-bottom:16px; }
+      .card-footer { align-items:center; gap:12px; } .section-header { align-items:flex-start; gap:12px; }
+      .product-count { letter-spacing:1px; text-align:right; } .cart-row.total { letter-spacing:1px; gap:12px; }
+      .cart-row.total .total-price { font-size:24px; } .checkout-btn { letter-spacing:1px; }
+      #toast { width:calc(100% - 32px); white-space:normal; padding:12px 16px; font-size:12px; }
+      .admin-body > * { min-width:0; } .admin-body .btn { width:100%; }
+    }
+  
+    /* Seamless, image-led product cards: preserve each source image's proportions. */
+    .card { align-self: start; height: auto; }
+    .card-img-wrap {
+      aspect-ratio: auto !important;
+      min-height: 0 !important;
+      height: auto !important;
+      padding: 0 !important;
+      background: transparent !important;
+      display: block !important;
+      overflow: hidden;
+      line-height: 0;
+      border-radius: inherit;
+    }
+    .card-img-wrap > img {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
+      max-height: 380px;
+      margin: 0 auto;
+      object-fit: contain !important;
+      object-position: center;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      filter: none;
+    }
+    .card:hover .card-img-wrap > img { filter: none; }
+    .card-badge { line-height: 1.4; }
+    @media (max-width: 900px) {
+      .card-img-wrap { aspect-ratio: auto !important; min-height: 0 !important; padding: 0 !important; }
+      .card-img-wrap > img { width: 100% !important; height: auto !important; max-height: 340px; }
+    }
+    @media (max-width: 520px) {
+      .card-img-wrap { aspect-ratio: auto !important; }
+      .card-img-wrap > img { max-height: 320px; }
+    }
+
+</style>
 </head>
 <body>
 
@@ -426,26 +489,41 @@
       </div>
       <div class="field-group">
         <label class="field-label">Product Category</label>
-        <select class="field-input" id="productCategory">
-          <option value="">Uncategorized</option>
-        </select>
+        <select class="field-input" id="productCategory" onchange="updateSubcategoryOptions()"><option value="">Uncategorized</option></select>
       </div>
       <div class="field-group">
-        <label class="field-label">Create New Category</label>
+        <label class="field-label">Create Main Category</label>
         <input class="field-input" id="newCategoryName" placeholder="e.g. Hinges & Joints">
+        <button class="btn btn-ghost specular-sweep" type="button" onclick="createCategory()">Create Main Category</button>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Subcategory</label>
+        <select class="field-input" id="productSubcategory"><option value="">No subcategory</option></select>
+        <label class="field-label">Create Subcategory</label>
+        <select class="field-input" id="newSubcategoryParent"><option value="">Choose main category</option></select>
+        <input class="field-input" id="newSubcategoryName" placeholder="e.g. Soft-Close Hinges">
+        <button class="btn btn-ghost specular-sweep" type="button" onclick="createSubcategory()">Create Subcategory</button>
       </div>
       <div class="field-group" style="grid-column: 1 / -1;">
         <label class="field-label">Existing Categories</label>
         <div id="adminCategoryList" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
       </div>
       
-      <button class="btn btn-ghost specular-sweep" onclick="createCategory()" style="height:54px; margin-bottom: 12px;">Create Category</button>
-      
       <div style="display: flex; gap: 10px; width: 100%;">
         <button class="btn btn-ghost specular-sweep" id="cancelEditBtn" onclick="cancelEdit()" style="height:54px; display: none;">Cancel</button>
         <button class="btn btn-primary specular-sweep" id="submitProductBtn" onclick="saveProduct()" style="height:54px; flex: 1;">Publish Product →</button>
       </div>
     </div>
+  </div>
+  <div id="bulkImportPanel" class="bulk-import-panel" style="display:none;"margin:0 clamp(16px,4vw,60px) 28px;padding:20px;border:1px solid var(--glass-border);border-radius:var(--radius-lg);background:var(--glass-surface);">
+    <h3 style="margin:0 0 8px;font-family:var(--font-heading);">Add multiple products</h3>
+    <p style="margin:0 0 14px;color:var(--text-muted);font-size:13px;line-height:1.6;">Import CSV columns: name, price, category, subcategory, priceOnRequest, imageUrl. Use true/false for priceOnRequest; imageUrl is optional.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <label class="file-upload-wrapper specular-sweep" style="flex:1;min-width:220px;"><span id="bulkCsvLabel">Choose product CSV…</span><input type="file" id="bulkCsvInput" accept=".csv,text/csv" onchange="previewBulkCsv(this.files[0])"></label>
+      <button class="btn btn-ghost" type="button" onclick="downloadBulkCsvTemplate()">Download CSV template</button>
+      <button class="btn btn-primary" id="bulkImportBtn" type="button" onclick="importBulkProducts()" disabled>Import products</button>
+    </div>
+    <div id="bulkCsvPreview" style="margin-top:14px;color:var(--text-muted);font-size:13px;"></div>
   </div>
 
   <div class="section-header scroll-reveal">
@@ -519,7 +597,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -548,9 +626,9 @@ let productToEditId = null;
 // ── URL PARAMETER PARSING ──
 const urlParams = new URLSearchParams(window.location.search);
 const categoryParam = urlParams.get('category');
-if (categoryParam) {
-  activeCategory = normalizeCategory(decodeURIComponent(categoryParam));
-}
+const subcategoryParam = urlParams.get('subcategory');
+if (subcategoryParam) activeCategory = normalizeCategory(decodeURIComponent(subcategoryParam));
+else if (categoryParam) activeCategory = normalizeCategory(decodeURIComponent(categoryParam));
 
 document.getElementById('copyrightYear').textContent = new Date().getFullYear();
 
@@ -637,10 +715,12 @@ onAuthStateChanged(auth, (u) => {
     user = u;
     authArea.innerHTML = `<span class="user-email">${user.email}</span><button class="btn btn-ghost specular-sweep" onclick="logout()">Sign Out</button>`;
     document.getElementById('adminPanel').style.display = isAdminEmail(user.email) ? 'block' : 'none';
+    document.getElementById('bulkImportPanel').style.display = isAdminEmail(user.email) ? 'block' : 'none';
   } else {
     user = null;
     authArea.innerHTML = `<button class="btn btn-primary specular-sweep" onclick="login()">Sign In</button>`;
     document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('bulkImportPanel').style.display = 'none';
   }
   if (allProducts.length > 0) display(allProducts);
 });
@@ -687,78 +767,53 @@ function getCategory(name) {
 }
 
 function buildCategoryList() {
-  const productCategoryNames = new Set();
-  allProducts.forEach(p => {
-    const categoryName = (p.category || getCategory(p.name)).toString().trim();
-    if (categoryName) productCategoryNames.add(categoryName);
-  });
-
-  const derivedCategories = Array.from(productCategoryNames)
-    .sort((a, b) => a.localeCompare(b))
-    .map(name => ({ id: normalizeCategory(name), name }));
-
-  const mergedCategories = allCategories.map(c => ({
-    ...c,
-    id: normalizeCategory(c.name)
-  }));
-
-  derivedCategories.forEach(cat => {
-    if (!mergedCategories.some(existing => existing.id === cat.id)) {
-      mergedCategories.push(cat);
-    }
-  });
-
-  const result = [{ id: 'all', name: 'All Categories' }, ...mergedCategories];
-  return result;
+  const names = new Set();
+  allProducts.forEach(p=>{const name=(p.category||getCategory(p.name)).toString().trim();if(name)names.add(name);});
+  const merged=allCategories.map(cat=>({...cat,id:normalizeCategory(cat.name)}));
+  Array.from(names).sort((a,b)=>a.localeCompare(b)).forEach(name=>{if(!merged.some(cat=>!cat.parentCategory&&cat.name.toLowerCase()===name.toLowerCase()))merged.push({id:normalizeCategory(name),name});});
+  return [{id:'all',name:'All Categories'},...merged];
 }
-
 function renderCategories() {
-  const categoryList = document.getElementById('categoryList');
-  const productCategorySelect = document.getElementById('productCategory');
-  const adminCategoryList = document.getElementById('adminCategoryList');
-  const categoryFilterSelect = document.getElementById('categoryFilterSelect');
-  const categoriesToRender = buildCategoryList();
-
-  if (categoryList) {
-    categoryList.innerHTML = categoriesToRender.map(c => {
-      const filterKey = c.id;
-      return `<button type="button" class="specular-sweep ${activeCategory === filterKey ? 'active' : ''}" onclick="filterByCategory('${filterKey.replace(/'/g, "\\'")}')">${c.name}</button>`;
-    }).join('');
-  }
-  if (productCategorySelect) {
-    productCategorySelect.innerHTML = `<option value="">Uncategorized</option>${categoriesToRender.slice(1).map(c => `<option value="${c.name}">${c.name}</option>`).join('')}`;
-  }
-  if (categoryFilterSelect) {
-     categoryFilterSelect.innerHTML = categoriesToRender.map(c => 
-       `<option value="${c.id}" ${activeCategory === c.id ? 'selected' : ''}>${c.name}</option>`
-     ).join('');
-  }
-  if (adminCategoryList) {
-    adminCategoryList.innerHTML = allCategories.length ? allCategories.map(c => `<span class="admin-chip">${c.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted); font-size:13px;">No categories created yet.</div>';
-  }
+  const categoryList=document.getElementById('categoryList'),categorySelect=document.getElementById('productCategory'),parentSelect=document.getElementById('newSubcategoryParent'),adminCategoryList=document.getElementById('adminCategoryList'),filterSelect=document.getElementById('categoryFilterSelect');
+  const mainCats=buildCategoryList().slice(1).filter(cat=>!cat.parentCategory),subs=allCategories.filter(cat=>cat.parentCategory);
+  if(categoryList)categoryList.innerHTML=`<button class="specular-sweep ${activeCategory==='all'?'active':''}" type="button" onclick="filterByCategory('all')">All Categories</button>`+mainCats.map(cat=>
+    `<button class="specular-sweep ${activeCategory===normalizeCategory(cat.name)?'active':''}" type="button" onclick="filterByCategory('${normalizeCategory(cat.name).replace(/'/g,"\\'")}')">${cat.name}</button>`+
+    subs.filter(sub=>sub.parentCategory.toLowerCase()===cat.name.toLowerCase()).map(sub=>
+      `<button class="specular-sweep ${activeCategory===normalizeCategory(sub.name)?'active':''}" type="button" style="padding-left:26px;font-size:12px;opacity:.9" onclick="filterByCategory('${normalizeCategory(sub.name).replace(/'/g,"\\'")}')">↳ ${sub.name}</button>`).join('')
+  ).join('');
+  if(categorySelect){const current=categorySelect.value;categorySelect.innerHTML=`<option value="">Uncategorized</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;if(mainCats.some(cat=>cat.name===current))categorySelect.value=current;updateSubcategoryOptions();}
+  if(parentSelect){const current=parentSelect.value;parentSelect.innerHTML=`<option value="">Choose main category</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;if(mainCats.some(cat=>cat.name===current))parentSelect.value=current;}
+  if(filterSelect){filterSelect.innerHTML=`<option value="all">All Categories</option>`+mainCats.map(cat=>`<option value="${normalizeCategory(cat.name)}">${cat.name}</option>`).join('')+subs.map(cat=>`<option value="${normalizeCategory(cat.name)}">${cat.parentCategory} / ${cat.name}</option>`).join('');filterSelect.value=activeCategory;}
+  if(adminCategoryList)adminCategoryList.innerHTML=allCategories.length?allCategories.map(cat=>`<span class="admin-chip">${cat.parentCategory?cat.parentCategory+' / ':''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}','${cat.name.replace(/'/g,"\\'")}')">✕</button></span>`).join(''):'<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
 }
-
+function updateSubcategoryOptions(selectedValue='') {
+  const select=document.getElementById('productSubcategory'),parent=document.getElementById('productCategory')?.value||'';
+  if(!select)return;
+  const options=allCategories.filter(cat=>cat.parentCategory&&cat.parentCategory.toLowerCase()===parent.toLowerCase());
+  select.innerHTML=`<option value="">No subcategory</option>${options.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
+  if(options.some(cat=>cat.name===selectedValue))select.value=selectedValue;
+}
 async function loadCategories() {
-  try {
-    const snap = await getDocs(collection(db, 'categories'));
-    allCategories = [];
-    snap.forEach(doc => allCategories.push({ id: doc.id, ...doc.data() }));
-    allCategories.sort((a, b) => a.name.localeCompare(b.name));
-    renderCategories();
-  } catch (error) { showToast('Unable to load categories.'); }
+  try{const snap=await getDocs(collection(db,'categories'));allCategories=[];snap.forEach(docSnap=>allCategories.push({id:docSnap.id,...docSnap.data()}));allCategories.sort((a,b)=>(a.parentCategory||'').localeCompare(b.parentCategory||'')||a.name.localeCompare(b.name));renderCategories();}
+  catch(error){showToast('Unable to load categories.');}
 }
 
 window.createCategory = async () => {
-  if (!user || !isAdminEmail(user.email)) { showToast('Admin authorization required.'); return; }
-  const name = document.getElementById('newCategoryName').value.trim();
-  if (!name) { showToast('Enter a category name.'); return; }
-  if (allCategories.some(c => c.name.toLowerCase() === name.toLowerCase())) { showToast('Category exists.'); return; }
-  try {
-    await addDoc(collection(db, 'categories'), { name, createdAt: new Date() });
-    document.getElementById('newCategoryName').value = ''; showToast('Category created.'); await loadCategories();
-  } catch (error) { showToast('Failed to create category.'); }
+  if(!user||!isAdminEmail(user.email)){showToast('Admin authorization required.');return;}
+  const name=document.getElementById('newCategoryName').value.trim();
+  if(!name){showToast('Enter a category name.');return;}
+  if(allCategories.some(cat=>!cat.parentCategory&&cat.name.toLowerCase()===name.toLowerCase())){showToast('Category exists.');return;}
+  try{await addDoc(collection(db,'categories'),{name,createdAt:new Date()});document.getElementById('newCategoryName').value='';showToast('Main category created.');await loadCategories();}
+  catch(error){showToast('Failed to create category.');}
 };
-
+window.createSubcategory = async () => {
+  if(!user||!isAdminEmail(user.email)){showToast('Admin authorization required.');return;}
+  const parentCategory=document.getElementById('newSubcategoryParent').value,name=document.getElementById('newSubcategoryName').value.trim();
+  if(!parentCategory||!name){showToast('Choose a main category and enter a subcategory name.');return;}
+  if(allCategories.some(cat=>cat.parentCategory&&cat.parentCategory.toLowerCase()===parentCategory.toLowerCase()&&cat.name.toLowerCase()===name.toLowerCase())){showToast('Subcategory already exists under this category.');return;}
+  try{await addDoc(collection(db,'categories'),{name,parentCategory,isSubcategory:true,createdAt:new Date()});document.getElementById('newSubcategoryName').value='';showToast('Subcategory created.');await loadCategories();}
+  catch(error){showToast('Failed to create subcategory.');}
+};
 window.deleteCategory = async (categoryId, categoryName) => {
   if (!user || !isAdminEmail(user.email)) return;
   if (!confirm(`Delete category "${categoryName}"?`)) return;
@@ -768,13 +823,13 @@ window.deleteCategory = async (categoryId, categoryName) => {
 
 window.filterByCategory = (categoryName) => {
   activeCategory = normalizeCategory(categoryName);
-  renderCategories();
-  filterProducts();
-  closeSidebar();
-  
+  renderCategories(); filterProducts(); closeSidebar();
   const url = new URL(window.location);
-  url.searchParams.set('category', activeCategory);
-  window.history.pushState({}, '', url);
+  url.searchParams.delete('subcategory');
+  if(activeCategory==='all')url.searchParams.delete('category');
+  else if(allCategories.some(cat=>cat.parentCategory&&normalizeCategory(cat.name)===activeCategory)){url.searchParams.delete('category');url.searchParams.set('subcategory',activeCategory);}
+  else url.searchParams.set('category',activeCategory);
+  window.history.pushState({},'',url);
 
   setTimeout(() => {
     const productsEl = document.getElementById('products');
@@ -790,9 +845,7 @@ async function loadProducts() {
     allProducts = [];
     snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
     display(allProducts);
-    if (categoryParam) {
-      filterProducts();
-    }
+    if (categoryParam || subcategoryParam) filterProducts();
     renderCategories();
   } catch(e) { document.getElementById('products').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Database Unreachable</h3></div>`; }
 }
@@ -804,8 +857,8 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = (p.category?.toString().trim() || getCategory(p.name)).trim();
-    const imgSrc = p.imageBase64 ? p.imageBase64 : getImage(p.name);
+    const categoryLabel = [p.category?.toString().trim() || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ').trim();
+    const imgSrc = p.imageBase64 || p.imageUrl || getImage(p.name);
     
     // Safely encode product properties for HTML injection
     const encodedP = encodeURIComponent(JSON.stringify(p));
@@ -884,11 +937,96 @@ window.filterProducts = () => {
   const q = document.getElementById('search').value.toLowerCase().trim();
   const filtered = allProducts.filter(p => {
     const categoryLabel = normalizeCategory(p.category || getCategory(p.name));
-    const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q);
-    const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory;
+    const subcategoryLabel = normalizeCategory(p.subcategory || '');
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || categoryLabel.includes(q) || subcategoryLabel.includes(q);
+    const matchesCategory = activeCategory === 'all' || categoryLabel === activeCategory || subcategoryLabel === activeCategory;
     return matchesSearch && matchesCategory;
   });
   display(filtered);
+};
+
+// Bulk CSV product import (admin only). CSV supports quoted fields and commas.
+let pendingBulkProducts = [];
+function parseProductCsv(text) {
+  const rows=[]; let row=[], field='', quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'&&quoted&&next==='"'){field+='"';i++;}
+    else if(ch==='"'){quoted=!quoted;}
+    else if(ch===','&&!quoted){row.push(field.trim());field='';}
+    else if((ch==='\n'||ch==='\r')&&!quoted){
+      if(ch==='\r'&&next==='\n')i++;
+      row.push(field.trim());field='';
+      if(row.some(value=>value!==''))rows.push(row);
+      row=[];
+    } else field+=ch;
+  }
+  if(field.length||row.length){row.push(field.trim());if(row.some(value=>value!==''))rows.push(row);}
+  if(quoted)throw new Error('CSV has an unclosed quote.');
+  if(!rows.length)return [];
+  const headers=rows.shift().map(h=>h.replace(/^\uFEFF/,'').toLowerCase().replace(/[\s-]+/g,''));
+  if(!headers.includes('name'))throw new Error('CSV must include a name column. Download the template for the full format.');
+  return rows.map((values,index)=>{
+    const data={};headers.forEach((header,i)=>data[header]=values[i]||'');
+    const name=(data.name||'').trim();
+    if(!name)throw new Error('Row '+(index+2)+' is missing a product name.');
+    const priceOnRequest=['true','yes','1'].includes((data.priceonrequest||'').toLowerCase());
+    const priceText=(data.price||'').trim();
+    if(!priceOnRequest&&(!priceText||!Number.isFinite(Number(priceText))||Number(priceText)<0))throw new Error('Row '+(index+2)+' needs a valid price or priceOnRequest=true.');
+    const imageUrl=(data.imageurl||'').trim();
+    if(imageUrl){let parsed;try{parsed=new URL(imageUrl);}catch{throw new Error('Row '+(index+2)+' has an invalid imageUrl.');}if(!['https:','http:'].includes(parsed.protocol))throw new Error('Row '+(index+2)+' imageUrl must use HTTP or HTTPS.');}
+    return {name,priceOnRequest,price:priceOnRequest?null:Number(priceText),category:(data.category||'').trim(),subcategory:(data.subcategory||'').trim(),imageUrl};
+  });
+}
+window.downloadBulkCsvTemplate = () => {
+  const csv='name,price,category,subcategory,priceOnRequest,imageUrl\n"Sample cabinet handle",2450,"Cabinet Pulls","Modern Handles",false,https://example.com/product.jpg\n"Custom fitting",,"Door Controls","Special Orders",true,';
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='bm-steel-products-template.csv';a.click();URL.revokeObjectURL(url);
+};
+window.previewBulkCsv = async (file) => {
+  pendingBulkProducts=[];document.getElementById('bulkImportBtn').disabled=true;
+  const preview=document.getElementById('bulkCsvPreview');
+  if(!file){document.getElementById('bulkCsvLabel').textContent='Choose product CSV…';preview.textContent='';return;}
+  document.getElementById('bulkCsvLabel').textContent=file.name;
+  if(file.size>2*1024*1024){preview.textContent='CSV must be smaller than 2 MB.';return;}
+  try{
+    pendingBulkProducts=parseProductCsv(await file.text());
+    if(!pendingBulkProducts.length)throw new Error('CSV contains no product rows.');
+    if(pendingBulkProducts.length>350)throw new Error('Please import at most 350 products per file.');
+    if(pendingBulkProducts.some(p=>p.subcategory&&!p.category))throw new Error('Every subcategory needs a main category in the same row.');
+    preview.textContent='Ready to import '+pendingBulkProducts.length+' products. Review the CSV before importing.';
+    document.getElementById('bulkImportBtn').disabled=false;
+  }catch(error){pendingBulkProducts=[];preview.textContent=error.message||'Could not read this CSV.';}
+};
+window.importBulkProducts = async () => {
+  if(!user||!isAdminEmail(user.email)){showToast('Admin authorization required.');return;}
+  if(!pendingBulkProducts.length){showToast('Choose and preview a valid CSV first.');return;}
+  const button=document.getElementById('bulkImportBtn');button.disabled=true;
+  try{
+    const mainByName=new Map(),subByKey=new Map();
+    allCategories.forEach(cat=>{if(cat.parentCategory)subByKey.set(cat.parentCategory.toLowerCase()+'::'+cat.name.toLowerCase(),cat);else mainByName.set(cat.name.toLowerCase(),cat);});
+    const missingMains=new Map(),missingSubs=new Map();
+    pendingBulkProducts.forEach(p=>{
+      if(p.category&&!mainByName.has(p.category.toLowerCase())&&!missingMains.has(p.category.toLowerCase()))missingMains.set(p.category.toLowerCase(),p.category);
+      if(p.category&&p.subcategory&&!subByKey.has(p.category.toLowerCase()+'::'+p.subcategory.toLowerCase()))missingSubs.set(p.category.toLowerCase()+'::'+p.subcategory.toLowerCase(),{name:p.subcategory,parentCategory:p.category});
+    });
+    if(pendingBulkProducts.length+missingMains.size+missingSubs.size>450)throw new Error('This import exceeds the safe batch size. Split the CSV into smaller files.');
+    const batch=writeBatch(db);
+    missingMains.forEach(name=>{const ref=doc(collection(db,'categories'));batch.set(ref,{name,createdAt:new Date()});mainByName.set(name.toLowerCase(),{id:ref.id,name});});
+    missingSubs.forEach((sub,key)=>{const ref=doc(collection(db,'categories'));batch.set(ref,{...sub,isSubcategory:true,createdAt:new Date()});subByKey.set(key,{id:ref.id,...sub});});
+    pendingBulkProducts.forEach(product=>{
+      const ref=doc(collection(db,'products'));
+      const data={name:product.name,category:product.category,subcategory:product.subcategory,priceOnRequest:product.priceOnRequest,price:product.priceOnRequest?0:product.price};
+      if(product.imageUrl)data.imageUrl=product.imageUrl;
+      batch.set(ref,data);
+    });
+    await batch.commit();
+    const count=pendingBulkProducts.length;pendingBulkProducts=[];
+    document.getElementById('bulkCsvInput').value='';document.getElementById('bulkCsvLabel').textContent='Choose product CSV…';
+    document.getElementById('bulkCsvPreview').textContent='Imported '+count+' products successfully.';
+    await Promise.all([loadProducts(),loadCategories()]);showToast(count+' products imported.');
+  }catch(error){document.getElementById('bulkCsvPreview').textContent='Import failed: '+(error.message||'Unknown error');showToast('Import failed. No partial batch was applied.');}
+  finally{button.disabled=!pendingBulkProducts.length;}
 };
 
 // Image Upload
@@ -918,6 +1056,8 @@ function resetAdminForm() {
   document.getElementById('priceOnRequest').checked = false;
   togglePriceOnRequest(false);
   document.getElementById('productCategory').value = '';
+  updateSubcategoryOptions();
+  document.getElementById('productSubcategory').value = '';
   document.getElementById('imageInput').value = '';
   document.getElementById('imageLabelText').textContent = "Select file...";
   document.getElementById('imageLabelText').style.color = "var(--text-muted)";
@@ -940,6 +1080,7 @@ window.editProduct = (encodedProductString) => {
   document.getElementById('price').value = p.price ?? '';
   togglePriceOnRequest(Boolean(p.priceOnRequest));
   document.getElementById('productCategory').value = p.category || '';
+  updateSubcategoryOptions(p.subcategory || '');
   productBase64Image = p.imageBase64 || null; // Retain existing image if present
   
   if (productBase64Image) {
@@ -968,13 +1109,14 @@ window.saveProduct = async () => {
   const price = document.getElementById('price').value.trim();
   const priceOnRequest = document.getElementById('priceOnRequest').checked;
   const category = document.getElementById('productCategory').value || '';
+  const subcategory = document.getElementById('productSubcategory').value || '';
   if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) {
     showToast(priceOnRequest ? 'Please enter a product name.' : 'Please enter a product name and a valid price.');
     return;
   }
 
   try {
-    const productData = { name, category, priceOnRequest };
+    const productData = { name, category, subcategory, priceOnRequest };
     // Keep an existing stored price untouched when switching to quote-based pricing.
     if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;

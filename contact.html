@@ -460,6 +460,43 @@
       .contact-card, .contact-form, .metric-card, .card { width: 100%; }
       .admin-header { align-items: flex-start; }
     }
+  
+    /* Consistent mobile ergonomics across informational pages */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { width: 100%; overflow-x: clip; }
+    body { width: 100%; max-width: 100%; overflow-x: clip; }
+    img, video, iframe { max-width: 100%; }
+    input, textarea, select, button { max-width: 100%; }
+    @media (max-width: 900px) {
+      header { height:auto; min-height:72px; padding:14px 18px; gap:12px; flex-wrap:wrap; }
+      .header-right { gap:10px; flex-wrap:wrap; }
+      .about-wrapper, .contact-wrapper { width:auto; max-width:100%; margin-inline:16px; padding:0; grid-template-columns:minmax(0,1fr); gap:20px; }
+      .metrics-grid, .contact-details { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+      .about-story, .contact-form { min-width:0; padding:clamp(18px,4vw,28px); }
+      .metric-card, .contact-card { min-width:0; padding:18px; }
+      .metric-card h3, .contact-card h3 { overflow-wrap:anywhere; }
+      main, section { max-width:100%; }
+      footer { padding:28px 20px; gap:16px; flex-wrap:wrap; }
+      .footer-left, .footer-right { letter-spacing:1px; }
+    }
+    @media (max-width: 520px) {
+      header { padding:12px 14px; }
+      .logo-main { font-size:clamp(14px,4vw,18px); }
+      .logo-sub { display:none; }
+      .about-wrapper, .contact-wrapper { margin-inline:12px; gap:16px; }
+      .metrics-grid, .contact-details { grid-template-columns:minmax(0,1fr); }
+      .about-story, .contact-form { padding:18px; gap:18px; }
+      .metric-card, .contact-card { padding:16px; }
+      .section-header { padding-inline:14px; gap:10px; align-items:flex-start; }
+      .section-title { font-size:clamp(24px,7vw,34px); }
+      .contact-card:hover { transform:none; }
+      .btn, button { min-height:44px; }
+      input, textarea, select { font-size:16px; }
+      #toast { width:calc(100% - 28px); white-space:normal; padding:12px 16px; text-align:center; }
+      footer { padding:24px 16px; align-items:flex-start; }
+      .footer-left, .footer-right { width:100%; justify-content:flex-start; }
+    }
+
   </style>
 </head>
 <body>
