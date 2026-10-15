@@ -102,8 +102,8 @@
     .logo-main { font-family: var(--font-heading); text-transform: var(--heading-transform); letter-spacing: calc(var(--heading-spacing) + 1px); }
     .card-name { font-family: var(--font-heading); font-weight: var(--heading-weight); }
 
-    .scroll-reveal { opacity: 0; transform: translateY(60px) scale(0.95); filter: blur(10px); transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity, filter; }
-    .scroll-reveal.in-view { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    .scroll-reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.35s ease, transform 0.35s ease; }
+    .scroll-reveal.in-view { opacity: 1; transform: translateY(0); }
 
     .ambient-lights { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; mix-blend-mode: screen; }
     body.theme-light .ambient-lights { mix-blend-mode: multiply; }
@@ -183,13 +183,21 @@
     .product-count { font-size: clamp(11px, 1.2vw, 13px); font-weight: 400; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; text-shadow: 0 0 10px var(--accent-glow); font-family: 'Outfit', sans-serif;}
 
     .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: clamp(24px, 4vw, 40px); padding: 0 clamp(16px, 4vw, 60px) clamp(80px, 12vh, 120px); }
-    .card { border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.8s var(--easing), border-radius 0.8s var(--easing); position: relative; display: flex; flex-direction: column; }
-    .card:hover { transform: translateY(-12px) scale(1.02); box-shadow: var(--shadow-glow); z-index: 2; border-color: var(--accent); }
+    .card { border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease; position: relative; display: flex; flex-direction: column; }
+    .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); z-index: 2; border-color: var(--accent); }
 
-    .card-img-wrap { position: relative; overflow: hidden; aspect-ratio: 1 / 1; background: rgba(0,0,0,0.2); padding: 16px; }
+    .card-img-wrap { position: relative; overflow: hidden; aspect-ratio: 4 / 3; min-height: 240px; background: rgba(0,0,0,0.2); padding: 14px; display: flex; align-items: center; justify-content: center; }
     body.theme-light .card-img-wrap { background: rgba(0,0,0,0.03); }
-    .card img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); transition: transform 1.2s var(--easing), filter 1.2s var(--easing), border-radius 0.8s var(--easing); filter: contrast(0.95) brightness(0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .card:hover img { transform: scale(1.08); filter: contrast(1.1) brightness(1.1); }
+    /* Preserve each product image's original aspect ratio; never crop to fill the card. */
+    .card-img-wrap > img { display: block; flex: 0 1 auto; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; border-radius: var(--radius-md); transition: filter 0.25s ease; filter: contrast(0.98) brightness(0.98); }
+    .card:hover img { filter: contrast(1.02) brightness(1.03); }
+    .card:has(.card-selection:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
+    .card-selection { position: absolute; right: 18px; bottom: 18px; z-index: 4; width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0,0,0,.45)); }
+    .bulk-toolbar { margin: 0 clamp(16px, 4vw, 60px) 24px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; border: 1px solid var(--glass-border); border-radius: var(--radius-md); background: var(--glass-surface); }
+    .bulk-toolbar-copy { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+    .bulk-toolbar-copy strong { color: var(--text); }
+    .bulk-toolbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .bulk-toolbar .btn { min-height: 40px; padding: 9px 15px; }
 
     .card-badge { position: absolute; top: 24px; left: 24px; z-index: 2; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px; background: var(--glass-surface); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--glass-border-light); border-radius: var(--radius-pill); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: border-radius 0.8s var(--easing); font-family: 'Outfit', sans-serif; }
 
@@ -320,6 +328,11 @@
     @media (max-width: 1100px) { header { padding: 0 clamp(16px, 4vw, 40px); } .hero-revolve { height: clamp(520px, 75vh, 780px); } .cube-scene { --cube-size: clamp(240px, 38vw, 360px); } .products, .about-wrapper, .contact-wrapper { padding-left: clamp(16px, 4vw, 24px); padding-right: clamp(16px, 4vw, 24px); } .footer { padding: clamp(32px, 6vh, 60px) clamp(24px, 5vw, 40px); } }
     @media (max-width: 900px) { header { flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; height: auto; } .header-right { width: 100%; justify-content: space-between; flex-wrap: wrap; } .sidebar { width: min(100%, 340px); max-width: 100%; } .hero-revolve { height: clamp(460px, 60vh, 620px); } .cube-scene { --cube-size: clamp(220px, 42vw, 320px); } .products { padding: 0 clamp(16px, 4vw, 24px) clamp(80px, 12vh, 100px); } .about-wrapper, .contact-wrapper { grid-template-columns: 1fr; gap: clamp(24px, 4vw, 36px); } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-right { justify-content: center; width: 100%; } .admin-body, .contact-details, .metrics-grid { grid-template-columns: 1fr !important; } .card-body { padding: clamp(18px, 3vw, 28px); } .card-img-wrap { padding: 12px; } .cart-item { flex-wrap: wrap; gap: 14px; } .cart-item-info { width: 100%; flex: none; } #cartDrawer { width: 100%; max-width: 100%; } }
     @media (max-width: 600px) { header { padding: clamp(12px, 3vw, 18px); } .logo-text, .logo-group { gap: 10px; } .logo-sub { display: none; } .section-header { padding: clamp(12px, 3vw, 18px); } .products { gap: clamp(18px, 4vw, 24px); } .card { border-radius: clamp(16px, 3vw, 20px); } .cart-item-remove { width: 100%; } .contact-card, .contact-form, .metric-card, .card { width: 100%; } .admin-header { align-items: flex-start; } }
+      @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      .scroll-reveal { opacity: 1; transform: none; }
+    }
+    @media (max-width: 600px) { .bulk-toolbar { align-items: stretch; } .bulk-toolbar-actions { width: 100%; } .bulk-toolbar-actions .btn { flex: 1; white-space: normal; } }
   </style>
 </head>
 <body>
@@ -397,8 +410,12 @@
         <input class="field-input" id="name" placeholder="e.g. Hydraulic Floor Spring">
       </div>
       <div class="field-group">
-        <label class="field-label">Price (₹)</label>
-        <input class="field-input" id="price" type="number" placeholder="e.g. 2450">
+        <label class="field-label" for="price">Price (₹)</label>
+        <input class="field-input" id="price" type="number" min="0" step="0.01" placeholder="e.g. 2450">
+        <label style="display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--text-muted);font-size:13px;cursor:pointer;">
+          <input id="priceOnRequest" type="checkbox" onchange="togglePriceOnRequest(this.checked)" style="accent-color:var(--accent);width:17px;height:17px;">
+          Set price to “On Request”
+        </label>
       </div>
       <div class="field-group">
         <label class="field-label"><span>Image Upload</span><span style="opacity:0.5; text-transform:none;">Max 800KB</span></label>
@@ -434,6 +451,14 @@
   <div class="section-header scroll-reveal">
     <div class="section-title glass-text">Catalogue</div>
     <div class="product-count" id="productCount">0 Items</div>
+  </div>
+
+  <div class="bulk-toolbar glass-panel" role="region" aria-label="Bulk product selection">
+    <div class="bulk-toolbar-copy"><strong id="selectedProductCount">0 products selected</strong><br>Select several items to add them to your basket together.</div>
+    <div class="bulk-toolbar-actions">
+      <button class="btn btn-ghost" type="button" onclick="clearProductSelection()">Clear selection</button>
+      <button class="btn btn-primary" type="button" onclick="addSelectedToCart()">Add selected to basket →</button>
+    </div>
   </div>
 
   <div class="products" id="products">
@@ -511,6 +536,7 @@ const isAdminEmail = (email) => ADMIN_EMAILS.has((email || '').toLowerCase());
 
 let user = null;
 let cart = [];
+let selectedProductIds = new Set();
 let allProducts = [];
 let allCategories = [];
 let activeCategory = 'all';
@@ -624,13 +650,13 @@ window.logout = async () => { await signOut(auth); showToast('Signed out securel
 
 // ── PRODUCT IMAGE MAP (PREMIUM FALLBACKS) ──
 const imageMap = {
-  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80',
-  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=800&q=80',
-  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
-  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=crop&w=800&q=80',
-  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
-  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=800&q=80'
+  default: 'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80',
+  closer:  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=max&w=800&q=80',
+  hinge:   'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=max&w=800&q=80',
+  kitchen: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  channel: 'https://images.unsplash.com/photo-1618220179428-22790b46a0eb?auto=format&fit=max&w=800&q=80',
+  handle:  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=max&w=800&q=80',
+  pull:    'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=max&w=800&q=80'
 };
 
 function getImage(name) {
@@ -788,28 +814,67 @@ function display(list) {
     <div class="card glass-panel specular-sweep scroll-reveal">
       <div class="card-img-wrap">
         <div class="card-badge">${categoryLabel.split(' ')[0]}</div>
+        <input class="card-selection" type="checkbox" aria-label="Select ${p.name.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" title="Select product" ${selectedProductIds.has(p.id) ? 'checked' : ''} onchange="toggleProductSelection('${p.id}', this.checked)">
         ${isAdmin ? `
           <button class="admin-edit-btn" onclick='editProduct("${encodedP}")' title="Edit Item">✎</button>
           <button class="admin-delete-btn" onclick='confirmDelete("${p.id}", "${p.name.replace(/'/g, "\\'")}")' title="Remove Item">✕</button>
         ` : ''}
-        <img src="${imgSrc}" alt="${p.name}" loading="lazy" onerror="this.src='${imageMap.default}'">
+        <img src="${imgSrc}" alt="${p.name.replace(/"/g, '&quot;')}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${imageMap.default}'">
       </div>
       <div class="card-body">
         <div class="card-category">${categoryLabel}</div>
         <div class="card-name">${p.name}</div>
         <div class="card-footer">
+${p.priceOnRequest ? `
+          <div class="card-price price-on-request">
+            <div class="label">Pricing</div>
+            <div class="val">On Request</div>
+          </div>` : `
           <div class="card-price">
             <div class="label">Unit Price</div>
             <div class="val"><span>₹</span>${Number(p.price).toLocaleString('en-IN')}</div>
-          </div>
+          </div>`}
           <button class="add-btn" onclick='addToCart("${encodedP}")'>+</button>
         </div>
       </div>
     </div>`
   }).join('');
   
+  updateSelectedProductCount();
   observeElements(); 
 }
+
+window.toggleProductSelection = (id, checked) => {
+  if (checked) selectedProductIds.add(id); else selectedProductIds.delete(id);
+  updateSelectedProductCount();
+};
+
+function updateSelectedProductCount() {
+  const count = selectedProductIds.size;
+  const target = document.getElementById('selectedProductCount');
+  if (target) target.textContent = count + (count === 1 ? ' product selected' : ' products selected');
+}
+
+window.clearProductSelection = () => {
+  selectedProductIds.clear();
+  document.querySelectorAll('.card-selection').forEach(input => { input.checked = false; });
+  updateSelectedProductCount();
+};
+
+window.addSelectedToCart = () => {
+  const selected = allProducts.filter(product => selectedProductIds.has(product.id));
+  if (!selected.length) { showToast('Select at least one product first.'); return; }
+  selected.forEach(product => {
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) existingItem.quantity += 1;
+    else cart.push({ ...product, quantity: 1 });
+  });
+  const addedCount = selected.length;
+  window.clearProductSelection();
+  updateCartCount();
+  if (cartOpen) renderCartItems();
+  showToast(addedCount + (addedCount === 1 ? ' product added to basket.' : ' products added to basket.'));
+};
 
 loadProducts();
 loadCategories();
@@ -839,9 +904,19 @@ document.getElementById('imageInput').addEventListener('change', function(e) {
 
 
 // ── ADMIN EDIT / SAVE PRODUCT LOGIC ──
+function togglePriceOnRequest(isOnRequest) {
+  const priceInput = document.getElementById('price');
+  priceInput.disabled = isOnRequest;
+  priceInput.required = !isOnRequest;
+  if (isOnRequest) priceInput.value = '';
+  priceInput.placeholder = isOnRequest ? 'Price will be quoted on request' : 'e.g. 2450';
+}
+
 function resetAdminForm() {
   document.getElementById('name').value = '';
   document.getElementById('price').value = '';
+  document.getElementById('priceOnRequest').checked = false;
+  togglePriceOnRequest(false);
   document.getElementById('productCategory').value = '';
   document.getElementById('imageInput').value = '';
   document.getElementById('imageLabelText').textContent = "Select file...";
@@ -861,7 +936,9 @@ window.editProduct = (encodedProductString) => {
   
   // Populate form
   document.getElementById('name').value = p.name;
-  document.getElementById('price').value = p.price;
+  document.getElementById('priceOnRequest').checked = Boolean(p.priceOnRequest);
+  document.getElementById('price').value = p.price ?? '';
+  togglePriceOnRequest(Boolean(p.priceOnRequest));
   document.getElementById('productCategory').value = p.category || '';
   productBase64Image = p.imageBase64 || null; // Retain existing image if present
   
@@ -889,11 +966,17 @@ window.saveProduct = async () => {
   if (!user || !isAdminEmail(user.email)) { showToast('Authorization required.'); return; }
   const name = document.getElementById('name').value.trim();
   const price = document.getElementById('price').value.trim();
+  const priceOnRequest = document.getElementById('priceOnRequest').checked;
   const category = document.getElementById('productCategory').value || '';
-  if (!name || !price) { showToast('Please complete all fields.'); return; }
-  
+  if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) {
+    showToast(priceOnRequest ? 'Please enter a product name.' : 'Please enter a product name and a valid price.');
+    return;
+  }
+
   try {
-    const productData = { name, price: Number(price), category };
+    const productData = { name, category, priceOnRequest };
+    // Keep an existing stored price untouched when switching to quote-based pricing.
+    if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
 
     if (productToEditId) {
@@ -940,13 +1023,16 @@ function renderCartItems() {
   }
   itemsEl.innerHTML = cart.map((item, i) => `
     <div class="cart-item">
-      <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">₹${Number(item.price).toLocaleString('en-IN')}</div></div>
+      <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${item.priceOnRequest ? 'Price on request' : '₹' + Number(item.price).toLocaleString('en-IN')}</div></div>
       <div class="cart-qty-control"><button onclick="updateQty(${i}, -1)">-</button><span>${item.quantity}</span><button onclick="updateQty(${i}, 1)">+</button></div>
       <button class="cart-item-remove" onclick="removeFromCart(${i})" title="Remove">✕</button>
     </div>
   `).join('');
-  const total = cart.reduce((s, i) => s + (Number(i.price) * i.quantity), 0);
-  summaryEl.innerHTML = `<div class="cart-row total"><span>Total Estimate</span><span class="total-price">₹${total.toLocaleString('en-IN')}</span></div>`;
+  const hasQuoteItems = cart.some(item => item.priceOnRequest);
+  const total = cart.reduce((s, i) => s + (i.priceOnRequest ? 0 : Number(i.price) * i.quantity), 0);
+  summaryEl.innerHTML = hasQuoteItems
+    ? `<div class="cart-row total"><span>Final pricing</span><span class="total-price">On Request</span></div><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Our team will confirm pricing for items marked “On Request”.</p>`
+    : `<div class="cart-row total"><span>Total Estimate</span><span class="total-price">₹${total.toLocaleString('en-IN')}</span></div>`;
   customerForm.classList.add('visible'); checkoutBtn.disabled = false;
 }
 
@@ -958,9 +1044,16 @@ window.checkout = () => {
   msg += `👤 *Client:* ${name}%0A📞 *Phone:* ${phone}%0A📍 *Delivery:* ${address}%0A`;
   if (user) msg += `✉️ *Email:* ${user.email}%0A`;
   msg += `📅 *Date:* ${new Date().toLocaleDateString('en-IN')}%0A━━━━━━━━━━━━━━━━━━━━%0A`;
-  cart.forEach((p) => { msg += `• ${p.quantity}x ${p.name} — ₹${(Number(p.price) * p.quantity).toLocaleString('en-IN')}%0A`; });
-  const total = cart.reduce((s,i) => s + (Number(i.price) * i.quantity), 0);
-  msg += `━━━━━━━━━━━━━━━━━━━━%0A✅ *TOTAL ESTIMATE:* ₹${total.toLocaleString('en-IN')}`;
+  cart.forEach((p) => {
+    const linePrice = p.priceOnRequest ? 'Price on request' : '₹' + (Number(p.price) * p.quantity).toLocaleString('en-IN');
+    msg += `• ${p.quantity}x ${p.name} — ${linePrice}%0A`;
+  });
+  if (cart.some(p => p.priceOnRequest)) {
+    msg += `━━━━━━━━━━━━━━━━━━━━%0Aℹ️ *FINAL PRICING:* To be confirmed by BM Steel Industries`;
+  } else {
+    const total = cart.reduce((s,i) => s + (Number(i.price) * i.quantity), 0);
+    msg += `━━━━━━━━━━━━━━━━━━━━%0A✅ *TOTAL ESTIMATE:* ₹${total.toLocaleString('en-IN')}`;
+  }
   window.open(`https://wa.me/919215600406?text=${msg}`);
 };
 </script>
