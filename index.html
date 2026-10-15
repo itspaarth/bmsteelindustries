@@ -375,7 +375,45 @@
       #toast { width:calc(100% - 32px); white-space:normal; padding:12px 16px; font-size:12px; }
       .admin-body > * { min-width:0; } .admin-body .btn { width:100%; }
     }
-  </style>
+  
+    /* Seamless, image-led product cards: preserve each source image's proportions. */
+    .card { align-self: start; height: auto; }
+    .card-img-wrap {
+      aspect-ratio: auto !important;
+      min-height: 0 !important;
+      height: auto !important;
+      padding: 0 !important;
+      background: transparent !important;
+      display: block !important;
+      overflow: hidden;
+      line-height: 0;
+      border-radius: inherit;
+    }
+    .card-img-wrap > img {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
+      max-height: 380px;
+      margin: 0 auto;
+      object-fit: contain !important;
+      object-position: center;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      filter: none;
+    }
+    .card:hover .card-img-wrap > img { filter: none; }
+    .card-badge { line-height: 1.4; }
+    @media (max-width: 900px) {
+      .card-img-wrap { aspect-ratio: auto !important; min-height: 0 !important; padding: 0 !important; }
+      .card-img-wrap > img { width: 100% !important; height: auto !important; max-height: 340px; }
+    }
+    @media (max-width: 520px) {
+      .card-img-wrap { aspect-ratio: auto !important; }
+      .card-img-wrap > img { max-height: 320px; }
+    }
+
+</style>
 </head>
 <body>
 
