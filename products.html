@@ -479,7 +479,7 @@
       </div>
     </div>
   </div>
-  <div class="bulk-import-panel" style="margin:0 clamp(16px,4vw,60px) 28px;padding:20px;border:1px solid var(--glass-border);border-radius:var(--radius-lg);background:var(--glass-surface);">
+  <div id="bulkImportPanel" class="bulk-import-panel" style="display:none;"margin:0 clamp(16px,4vw,60px) 28px;padding:20px;border:1px solid var(--glass-border);border-radius:var(--radius-lg);background:var(--glass-surface);">
     <h3 style="margin:0 0 8px;font-family:var(--font-heading);">Add multiple products</h3>
     <p style="margin:0 0 14px;color:var(--text-muted);font-size:13px;line-height:1.6;">Import CSV columns: name, price, category, subcategory, priceOnRequest, imageUrl. Use true/false for priceOnRequest; imageUrl is optional.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -679,10 +679,12 @@ onAuthStateChanged(auth, (u) => {
     user = u;
     authArea.innerHTML = `<span class="user-email">${user.email}</span><button class="btn btn-ghost specular-sweep" onclick="logout()">Sign Out</button>`;
     document.getElementById('adminPanel').style.display = isAdminEmail(user.email) ? 'block' : 'none';
+    document.getElementById('bulkImportPanel').style.display = isAdminEmail(user.email) ? 'block' : 'none';
   } else {
     user = null;
     authArea.innerHTML = `<button class="btn btn-primary specular-sweep" onclick="login()">Sign In</button>`;
     document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('bulkImportPanel').style.display = 'none';
   }
   if (allProducts.length > 0) display(allProducts);
 });
