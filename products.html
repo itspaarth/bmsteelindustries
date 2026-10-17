@@ -396,6 +396,46 @@
       .card-img-wrap > img { max-height: 320px; }
     }
 
+
+/* BM Steel visual refresh: restrained industrial luxury, clean type, deliberate spacing. */
+:root { --bm-metal-line: rgba(185,155,105,.24); --bm-metal-wash: rgba(185,155,105,.075); }
+body { background-image: radial-gradient(ellipse at 12% 0%, rgba(180,148,95,.09), transparent 34%), radial-gradient(ellipse at 90% 18%, rgba(93,112,132,.09), transparent 30%), linear-gradient(180deg, #101214 0%, #141619 48%, #101214 100%); background-attachment: fixed; }
+header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.sidebar { background:rgba(18,20,22,.96); border-right:1px solid var(--bm-metal-line); box-shadow:18px 0 60px rgba(0,0,0,.22); }
+.logo-emblem { border-radius:10px !important; box-shadow:none !important; background:linear-gradient(145deg,#d3bb8a,#9b7945) !important; color:#171717 !important; font-weight:800; letter-spacing:-.05em; }
+.section-title, .admin-title, .cart-title { letter-spacing:-.035em; }
+.section-header { padding-top:clamp(24px,4vw,44px); }
+.products { gap:clamp(18px,2.4vw,30px); }
+.card.glass-panel { border:1px solid rgba(255,255,255,.09); background:linear-gradient(160deg,rgba(34,37,40,.96),rgba(23,25,27,.98)); box-shadow:0 12px 36px rgba(0,0,0,.16); }
+.card { border-radius:18px !important; transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease !important; }
+.card:hover { transform:translateY(-4px) !important; border-color:rgba(194,164,111,.52) !important; box-shadow:0 18px 44px rgba(0,0,0,.24) !important; }
+.card-img-wrap { background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.012)) !important; }
+.card-body { padding:clamp(18px,2vw,26px) !important; border-top:1px solid rgba(255,255,255,.075) !important; }
+.card-category { letter-spacing:1.8px !important; text-shadow:none !important; opacity:.9; }
+.card-name { letter-spacing:-.02em; line-height:1.28 !important; }
+.card-price .val { font-weight:500 !important; letter-spacing:-.035em; }
+.card-badge { border:1px solid rgba(194,164,111,.24); border-radius:7px !important; letter-spacing:1.1px !important; }
+.add-btn { border-radius:12px !important; transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease !important; }
+.add-btn:hover { transform:translateY(-2px) !important; }
+.btn, .checkout-btn, .cart-fab { border-radius:10px !important; letter-spacing:.045em; transition:transform .2s ease,background .2s ease,border-color .2s ease !important; }
+.btn:hover, .checkout-btn:hover { transform:translateY(-1px); }
+.search-bar { border-radius:12px !important; box-shadow:none !important; }
+.glass-panel:not(.card) { border-color:rgba(255,255,255,.10); }
+.admin-header, .cart-header { border-bottom:1px solid var(--bm-metal-line); }
+.field-input { border-radius:10px !important; }
+.sidebar-categories a, .sidebar-categories button { border-radius:8px; transition:background .18s ease,color .18s ease; }
+.sidebar-categories a:hover, .sidebar-categories button:hover { background:var(--bm-metal-wash); }
+@media (prefers-reduced-motion: reduce) {
+  .card, .btn, .add-btn, .sidebar-categories a, .sidebar-categories button { transition:none !important; }
+}
+
+/* Admin bulk price controls are visually distinct from the existing basket selection. */
+.bulk-price-selection { position:absolute; top:58px; right:18px; z-index:5; width:22px; height:22px; accent-color:var(--accent); cursor:pointer; filter:drop-shadow(0 1px 3px rgba(0,0,0,.45)); }
+.card:has(.bulk-price-selection:checked) { outline:1px solid var(--accent); outline-offset:2px; }
+.admin-price-toolbar { align-items:flex-end; }
+.admin-price-toolbar .field-input { min-width:180px; }
+@media (max-width:900px) { .admin-price-toolbar .field-input { min-width:0; } }
+
 </style>
 </head>
 <body>
