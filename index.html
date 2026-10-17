@@ -816,10 +816,13 @@ function getCategory(name) {
   return 'Architectural Fitting';
 }
 
+function escapeCategoryHtml(value) {
+  return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function buildCategoryList() {
   const names = new Set();
-  allProducts.forEach(p => { const name = (p.category || getCategory(p.name)).trim(); if (name) names.add(name); });
-  const merged = allCategories.map(cat => ({ ...cat, id: normalizeCategory(cat.name) }));
+  allProducts.forEach(p => { if (p.categoryRemoved) return; const name = (p.category || getCategory(p.name)).trim(); if (name) names.add(name); });
+  const merged = allCategories.map(cat => ({ ...cat, id: cat.id || normalizeCategory(cat.name) }));
   Array.from(names).sort((a,b)=>a.localeCompare(b)).forEach(name => {
     if (!merged.some(cat => !cat.parentCategory && cat.name.toLowerCase() === name.toLowerCase())) merged.push({ id: normalizeCategory(name), name });
   });
@@ -832,11 +835,15 @@ function renderCategories() {
   const adminCategoryList = document.getElementById('adminCategoryList');
   const mainCats = buildCategoryList().slice(1).filter(cat => !cat.parentCategory);
   const subs = allCategories.filter(cat => cat.parentCategory);
-  if (categoryList) categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep">All Categories</a>` + mainCats.map(cat =>
-    `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep">${cat.name}</a>` +
-    subs.filter(sub => sub.parentCategory.toLowerCase() === cat.name.toLowerCase()).map(sub =>
-      `<a href="products.html?subcategory=${encodeURIComponent(normalizeCategory(sub.name))}" class="specular-sweep" style="padding-left:28px;font-size:12px;">↳ ${sub.name}</a>`).join('')
-  ).join('');
+  if (categoryList) {
+    categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep" data-category-type="all">All Categories</a>` + mainCats.map(cat => {
+      const stored = allCategories.find(item => !item.parentCategory && item.name.toLowerCase() === cat.name.toLowerCase());
+      return `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep" data-category-type="main" data-category-id="${stored?.id || ''}" data-category-name="${escapeCategoryHtml(cat.name)}">${escapeCategoryHtml(cat.name)}</a>` +
+      subs.filter(sub => sub.parentCategory.toLowerCase() === cat.name.toLowerCase()).map(sub =>
+        `<a href="products.html?subcategory=${encodeURIComponent(normalizeCategory(sub.name))}" class="specular-sweep" style="padding-left:28px;font-size:12px;" data-category-type="subcategory" data-category-id="${sub.id || ''}" data-category-name="${escapeCategoryHtml(sub.name)}">↳ ${escapeCategoryHtml(sub.name)}</a>`).join('');
+    }).join('');
+    bindSidebarCategoryLongPress();
+  }
   if (categorySelect) {
     const current = categorySelect.value;
     categorySelect.innerHTML = `<option value="">Uncategorized</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
@@ -851,6 +858,31 @@ function renderCategories() {
   if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat =>
     `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') :
     '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+}
+function bindSidebarCategoryLongPress() {
+  const container = document.getElementById('categoryList');
+  if (!container || container.dataset.longPressBound === 'true') return;
+  container.dataset.longPressBound = 'true';
+  container.addEventListener('pointerdown', event => {
+    const item = event.target.closest('[data-category-type="main"],[data-category-type="subcategory"]');
+    if (!item || !user || !isAdminEmail(user.email) || event.button !== 0) return;
+    let timer;
+    timer = setTimeout(() => {
+      item.dataset.longPressTriggered = 'true';
+      window.deleteCategory(item.dataset.categoryId || '', item.dataset.categoryName || item.textContent.trim().replace(/^↳\s*/, ''), item.dataset.categoryType);
+    }, 700);
+    const clear = () => { clearTimeout(timer); item.removeEventListener('pointerup', clear); item.removeEventListener('pointerleave', clear); item.removeEventListener('pointercancel', clear); };
+    item.addEventListener('pointerup', clear, { once:true });
+    item.addEventListener('pointerleave', clear, { once:true });
+    item.addEventListener('pointercancel', clear, { once:true });
+    item.addEventListener('click', clickEvent => {
+      if (item.dataset.longPressTriggered === 'true') {
+        clickEvent.preventDefault(); clickEvent.stopImmediatePropagation();
+        delete item.dataset.longPressTriggered;
+      }
+    }, true);
+    item.addEventListener('contextmenu', e => { if (user && isAdminEmail(user.email)) e.preventDefault(); });
+  });
 }
 function updateSubcategoryOptions(selectedValue = '') {
   const select = document.getElementById('productSubcategory');
@@ -887,13 +919,39 @@ window.createSubcategory = async () => {
   try { await addDoc(collection(db,'categories'),{name,parentCategory,isSubcategory:true,createdAt:new Date()}); document.getElementById('newSubcategoryName').value=''; showToast('Subcategory created.'); await loadCategories(); }
   catch(error) { showToast('Failed to create subcategory.'); }
 };
-window.deleteCategory = async (categoryId, categoryName) => {
+window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') => {
   if (!user || !isAdminEmail(user.email)) return;
-  if (!confirm(`Permanently delete category "${categoryName}"?`)) return;
-  try { await deleteDoc(doc(db, 'categories', categoryId)); showToast('Category removed.'); await loadCategories(); } 
-  catch (error) { showToast('Failed to delete category.'); }
+  const isSubcategory = categoryType === 'subcategory';
+  const prompt = isSubcategory
+    ? `Remove subcategory "${categoryName}"? Products in it will stay in the main category.`
+    : `Remove category "${categoryName}" and its subcategories? Products will remain in the catalogue as uncategorized.`;
+  if (!confirm(prompt)) return;
+  try {
+    const parentName = isSubcategory ? (allCategories.find(cat => cat.id === categoryId)?.parentCategory || '') : '';
+    const affected = allProducts.filter(product => isSubcategory
+      ? (product.category || '').toLowerCase() === parentName.toLowerCase() && (product.subcategory || '').toLowerCase() === categoryName.toLowerCase()
+      : !product.categoryRemoved && (product.category || getCategory(product.name)).toLowerCase() === categoryName.toLowerCase());
+    for (let start = 0; start < affected.length; start += 400) {
+      const batch = writeBatch(db);
+      affected.slice(start, start + 400).forEach(product => {
+        const ref = doc(db, 'products', product.id);
+        if (isSubcategory) batch.update(ref, { subcategory: '' });
+        else batch.update(ref, { category: '', subcategory: '', categoryRemoved: true });
+      });
+      await batch.commit();
+    }
+    const categoryDocs = isSubcategory
+      ? allCategories.filter(cat => cat.id === categoryId)
+      : allCategories.filter(cat => cat.id === categoryId || (cat.parentCategory || '').toLowerCase() === categoryName.toLowerCase());
+    for (const cat of categoryDocs) await deleteDoc(doc(db, 'categories', cat.id));
+    allProducts = allProducts.map(product => affected.some(item => item.id === product.id)
+      ? (isSubcategory ? { ...product, subcategory: '' } : { ...product, category: '', subcategory: '', categoryRemoved: true })
+      : product);
+    showToast(isSubcategory ? 'Subcategory removed.' : 'Category and subcategories removed.');
+    await loadCategories();
+    display(allProducts);
+  } catch (error) { showToast('Failed to delete category.'); }
 };
-
 async function loadProducts() {
   try {
     const snap = await getDocs(collection(db, 'products'));
@@ -910,7 +968,7 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = [p.category || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ');
+    const categoryLabel = p.categoryRemoved ? 'Uncategorized' : [p.category || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ');
     const imgSrc = p.imageBase64 || p.imageUrl || getImage(p.name);
     
     // Safely encode product properties for HTML injection
@@ -1031,7 +1089,7 @@ window.saveProduct = async () => {
   const priceOnRequest = document.getElementById('priceOnRequest')?.checked || false;
   if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) { showToast('Enter a product name and a valid price, or choose On Request.'); return; }
   try {
-    const productData = { name, category, subcategory, priceOnRequest };
+    const productData = { name, category, subcategory, priceOnRequest, categoryRemoved: false };
     if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
 
