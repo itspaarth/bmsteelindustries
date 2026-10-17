@@ -655,6 +655,8 @@ const isAdminEmail = (email) => ADMIN_EMAILS.has((email || '').toLowerCase());
 let user = null;
 let cart = [];
 let selectedProductIds = new Set();
+let selectedPriceProductIds = new Set();
+let bulkPriceSourcePrice = null;
 let allProducts = [];
 let allCategories = [];
 let activeCategory = 'all';
@@ -806,25 +808,48 @@ function getCategory(name) {
   return 'Architectural Fitting';
 }
 
+function escapeCategoryHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function buildCategoryList() {
   const names = new Set();
-  allProducts.forEach(p=>{const name=(p.category||getCategory(p.name)).toString().trim();if(name)names.add(name);});
-  const merged=allCategories.map(cat=>({...cat,id:normalizeCategory(cat.name)}));
+  allProducts.forEach(p=>{if(p.categoryRemoved)return;const name=(p.category||getCategory(p.name)).toString().trim();if(name)names.add(name);});
+  const merged=allCategories.map(cat=>({...cat,id:cat.id||normalizeCategory(cat.name)}));
   Array.from(names).sort((a,b)=>a.localeCompare(b)).forEach(name=>{if(!merged.some(cat=>!cat.parentCategory&&cat.name.toLowerCase()===name.toLowerCase()))merged.push({id:normalizeCategory(name),name});});
   return [{id:'all',name:'All Categories'},...merged];
 }
 function renderCategories() {
   const categoryList=document.getElementById('categoryList'),categorySelect=document.getElementById('productCategory'),parentSelect=document.getElementById('newSubcategoryParent'),adminCategoryList=document.getElementById('adminCategoryList'),filterSelect=document.getElementById('categoryFilterSelect');
   const mainCats=buildCategoryList().slice(1).filter(cat=>!cat.parentCategory),subs=allCategories.filter(cat=>cat.parentCategory);
-  if(categoryList)categoryList.innerHTML=`<button class="specular-sweep ${activeCategory==='all'?'active':''}" type="button" onclick="filterByCategory('all')">All Categories</button>`+mainCats.map(cat=>
-    `<button class="specular-sweep ${activeCategory===normalizeCategory(cat.name)?'active':''}" type="button" onclick="filterByCategory('${normalizeCategory(cat.name).replace(/'/g,"\\'")}')">${cat.name}</button>`+
-    subs.filter(sub=>sub.parentCategory.toLowerCase()===cat.name.toLowerCase()).map(sub=>
-      `<button class="specular-sweep ${activeCategory===normalizeCategory(sub.name)?'active':''}" type="button" style="padding-left:26px;font-size:12px;opacity:.9" onclick="filterByCategory('${normalizeCategory(sub.name).replace(/'/g,"\\'")}')">↳ ${sub.name}</button>`).join('')
-  ).join('');
+  if(categoryList){
+    categoryList.innerHTML=`<button class="specular-sweep ${activeCategory==='all'?'active':''}" type="button" data-category-type="all" onclick="filterByCategory('all')">All Categories</button>`+mainCats.map(cat=>{
+      const stored=allCategories.find(item=>!item.parentCategory&&item.name.toLowerCase()===cat.name.toLowerCase());
+      return `<button class="specular-sweep ${activeCategory===normalizeCategory(cat.name)?'active':''}" type="button" data-category-type="main" data-category-id="${stored?.id||''}" data-category-name="${escapeCategoryHtml(cat.name)}" onclick="filterByCategory('${normalizeCategory(cat.name).replace(/'/g,"\\'")}')">${escapeCategoryHtml(cat.name)}</button>`+
+      subs.filter(sub=>sub.parentCategory.toLowerCase()===cat.name.toLowerCase()).map(sub=>
+        `<button class="specular-sweep ${activeCategory===normalizeCategory(sub.name)?'active':''}" type="button" style="padding-left:26px;font-size:12px;opacity:.9" data-category-type="subcategory" data-category-id="${sub.id||''}" data-category-name="${escapeCategoryHtml(sub.name)}" onclick="filterByCategory('${normalizeCategory(sub.name).replace(/'/g,"\\'")}')">↳ ${escapeCategoryHtml(sub.name)}</button>`).join('');
+    }).join('');
+    bindSidebarCategoryLongPress();
+  }
   if(categorySelect){const current=categorySelect.value;categorySelect.innerHTML=`<option value="">Uncategorized</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;if(mainCats.some(cat=>cat.name===current))categorySelect.value=current;updateSubcategoryOptions();}
   if(parentSelect){const current=parentSelect.value;parentSelect.innerHTML=`<option value="">Choose main category</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;if(mainCats.some(cat=>cat.name===current))parentSelect.value=current;}
   if(filterSelect){filterSelect.innerHTML=`<option value="all">All Categories</option>`+mainCats.map(cat=>`<option value="${normalizeCategory(cat.name)}">${cat.name}</option>`).join('')+subs.map(cat=>`<option value="${normalizeCategory(cat.name)}">${cat.parentCategory} / ${cat.name}</option>`).join('');filterSelect.value=activeCategory;}
-  if(adminCategoryList)adminCategoryList.innerHTML=allCategories.length?allCategories.map(cat=>`<span class="admin-chip">${cat.parentCategory?cat.parentCategory+' / ':''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}','${cat.name.replace(/'/g,"\\'")}')">✕</button></span>`).join(''):'<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+  if(adminCategoryList)adminCategoryList.innerHTML=allCategories.length?allCategories.map(cat=>`<span class="admin-chip">${cat.parentCategory?cat.parentCategory+' / ':''}${escapeCategoryHtml(cat.name)} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}','${cat.name.replace(/'/g,"\\'")}','${cat.parentCategory?'subcategory':'main'}')">✕</button></span>`).join(''):'<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+}
+function bindSidebarCategoryLongPress(){
+  const container=document.getElementById('categoryList');
+  if(!container||container.dataset.longPressBound==='true')return;
+  container.dataset.longPressBound='true';
+  container.addEventListener('pointerdown',event=>{
+    const item=event.target.closest('[data-category-type="main"],[data-category-type="subcategory"]');
+    if(!item||!user||!isAdminEmail(user.email)||event.button!==0)return;
+    let timer;
+    timer=setTimeout(()=>{
+      item.dataset.longPressTriggered='true';
+      window.deleteCategory(item.dataset.categoryId||'',item.dataset.categoryName||item.textContent.trim().replace(/^↳\s*/,''),item.dataset.categoryType);
+    },700);
+    const clear=()=>{clearTimeout(timer);item.removeEventListener('pointerup',clear);item.removeEventListener('pointerleave',clear);item.removeEventListener('pointercancel',clear);};
+    item.addEventListener('pointerup',clear,{once:true});item.addEventListener('pointerleave',clear,{once:true});item.addEventListener('pointercancel',clear,{once:true});
+    item.addEventListener('click',clickEvent=>{if(item.dataset.longPressTriggered==='true'){clickEvent.preventDefault();clickEvent.stopImmediatePropagation();delete item.dataset.longPressTriggered;}},true);
+    item.addEventListener('contextmenu',e=>{if(user&&isAdminEmail(user.email))e.preventDefault();});
+  });
 }
 function updateSubcategoryOptions(selectedValue='') {
   const select=document.getElementById('productSubcategory'),parent=document.getElementById('productCategory')?.value||'';
@@ -854,11 +879,38 @@ window.createSubcategory = async () => {
   try{await addDoc(collection(db,'categories'),{name,parentCategory,isSubcategory:true,createdAt:new Date()});document.getElementById('newSubcategoryName').value='';showToast('Subcategory created.');await loadCategories();}
   catch(error){showToast('Failed to create subcategory.');}
 };
-window.deleteCategory = async (categoryId, categoryName) => {
-  if (!user || !isAdminEmail(user.email)) return;
-  if (!confirm(`Delete category "${categoryName}"?`)) return;
-  try { await deleteDoc(doc(db, 'categories', categoryId)); showToast('Category removed.'); await loadCategories(); } 
-  catch (error) { showToast('Failed to delete category.'); }
+window.deleteCategory = async (categoryId,categoryName,categoryType='main')=>{
+  if(!user||!isAdminEmail(user.email))return;
+  const isSubcategory=categoryType==='subcategory';
+  const prompt=isSubcategory
+    ? `Remove subcategory "${categoryName}"? Products in it will stay in the main category.`
+    : `Remove category "${categoryName}" and its subcategories? Products will remain in the catalogue as uncategorized.`;
+  if(!confirm(prompt))return;
+  try{
+    const parentName=isSubcategory?(allCategories.find(cat=>cat.id===categoryId)?.parentCategory||''):'';
+    const affected=allProducts.filter(product=>isSubcategory
+      ? (product.category||'').toLowerCase()===parentName.toLowerCase()&&(product.subcategory||'').toLowerCase()===categoryName.toLowerCase()
+      : !product.categoryRemoved&&(product.category||getCategory(product.name)).toLowerCase()===categoryName.toLowerCase());
+    for(let start=0;start<affected.length;start+=400){
+      const batch=writeBatch(db);
+      affected.slice(start,start+400).forEach(product=>{
+        const ref=doc(db,'products',product.id);
+        if(isSubcategory)batch.update(ref,{subcategory:''});
+        else batch.update(ref,{category:'',subcategory:'',categoryRemoved:true});
+      });
+      await batch.commit();
+    }
+    const categoryDocs=isSubcategory
+      ? allCategories.filter(cat=>cat.id===categoryId)
+      : allCategories.filter(cat=>cat.id===categoryId||(cat.parentCategory||'').toLowerCase()===categoryName.toLowerCase());
+    for(const cat of categoryDocs)await deleteDoc(doc(db,'categories',cat.id));
+    allProducts=allProducts.map(product=>affected.some(item=>item.id===product.id)
+      ? (isSubcategory?{...product,subcategory:''}:{...product,category:'',subcategory:'',categoryRemoved:true})
+      : product);
+    showToast(isSubcategory?'Subcategory removed.':'Category and subcategories removed.');
+    await loadCategories();
+    filterProducts();
+  }catch(error){showToast('Failed to delete category.');}
 };
 
 window.filterByCategory = (categoryName) => {
@@ -897,7 +949,7 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = [p.category?.toString().trim() || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ').trim();
+    const categoryLabel = p.categoryRemoved ? 'Uncategorized' : [p.category?.toString().trim() || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ').trim();
     const imgSrc = p.imageBase64 || p.imageUrl || getImage(p.name);
     
     // Safely encode product properties for HTML injection
@@ -1156,7 +1208,7 @@ window.saveProduct = async () => {
   }
 
   try {
-    const productData = { name, category, subcategory, priceOnRequest };
+    const productData = { name, category, subcategory, priceOnRequest, categoryRemoved: false };
     // Keep an existing stored price untouched when switching to quote-based pricing.
     if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
