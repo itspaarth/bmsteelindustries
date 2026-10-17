@@ -911,12 +911,6 @@ window.filterByCategory = (categoryName) => {
 async function loadProducts() {
   const productsEl = document.getElementById('products');
   try {
-    let snap;
-    let serverReadFailed = false;
-
-    // Prefer a seasync function loadProducts() {
-  const productsEl = document.getElementById('products');
-  try {
     // Use the same Firestore initialization and read method as the working homepage.
     const snap = await getDocs(collection(db, 'products'));
     allProducts = snap.docs.map(productDoc => ({ id: productDoc.id, ...productDoc.data() }));
