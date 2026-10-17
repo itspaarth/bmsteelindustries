@@ -1068,26 +1068,35 @@ window.filterByCategory = (categoryName) => {
 async function loadProducts() {
   const productsEl = document.getElementById('products');
   try {
-    // Read from Firestore's server so a temporary offline/cache state cannot look like an empty catalogue.
-    let snap = await getDocsFromServer(collection(db, 'products'));
+    // Prefer a server read so stale local cache data cannot masquerade as the live catalogue.
+    let snap;
+    try {
+      snap = await getDocsFromServer(collection(db, 'products'));
+    } catch (serverError) {
+      console.warn('Firestore server read failed; trying the standard read:', serverError);
+      // Standard getDocs can still return previously cached products when connectivity is intermittent.
+      snap = await getDocs(collection(db, 'products'));
+      if (snap.empty) throw serverError;
+    }
+
     if (snap.empty) {
       // Confirm an empty response once before telling customers the collection is empty.
       await new Promise(resolve => setTimeout(resolve, 650));
       const confirmSnap = await getDocsFromServer(collection(db, 'products'));
       if (!confirmSnap.empty) snap = confirmSnap;
     }
+
     allProducts = snap.docs.map(productDoc => ({ id: productDoc.id, ...productDoc.data() }));
     display(allProducts);
-    if (categoryParam || subcategoryParam) filterProducts();
-    renderCategories();
+      if (categoryParam || subcategoryParam) filterProducts();
+      renderCategories();
   } catch (error) {
-    console.error('Unable to load product collection from Firestore:', error);
+    console.error('Unable to load product collection:', error);
     if (allProducts.length) {
-      // Preserve the last successfully loaded catalogue if a refresh temporarily fails.
       display(allProducts);
       showToast('Could not refresh products. Showing the last loaded collection.');
     } else {
-      productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>Please check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
+      productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>This may be a temporary connection or database-permission issue. Please try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
     }
   }
 }
