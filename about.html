@@ -239,7 +239,7 @@
   
 /* Match the premium industrial identity across About and Contact pages. */
 :root { --bm-metal-line:rgba(185,155,105,.24); --bm-metal-wash:rgba(185,155,105,.075); }
-body { background-image:radial-gradient(ellipse at 12% 0%,rgba(180,148,95,.09),transparent 34%),radial-gradient(ellipse at 90% 18%,rgba(93,112,132,.09),transparent 30%),linear-gradient(180deg,#101214 0%,#141619 48%,#101214 100%);background-attachment:fixed; }
+body:not(.theme-light):not(.theme-sapphire):not(.theme-emerald):not(.theme-amethyst) { background-image:radial-gradient(ellipse at 12% 0%,rgba(180,148,95,.09),transparent 34%),radial-gradient(ellipse at 90% 18%,rgba(93,112,132,.09),transparent 30%),linear-gradient(180deg,#101214 0%,#141619 48%,#101214 100%);background-attachment:fixed; }
 header { border-bottom:1px solid var(--bm-metal-line);background:rgba(16,18,20,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px); }
 .sidebar { background:rgba(18,20,22,.96);border-right:1px solid var(--bm-metal-line);box-shadow:18px 0 60px rgba(0,0,0,.22); }
 .logo-emblem { border-radius:10px !important;box-shadow:none !important;background:linear-gradient(145deg,#d3bb8a,#9b7945) !important;color:#171717 !important;font-weight:800;letter-spacing:-.05em; }
