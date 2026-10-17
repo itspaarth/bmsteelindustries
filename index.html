@@ -413,7 +413,165 @@
       .card-img-wrap > img { max-height: 320px; }
     }
 
-</style>
+
+/* BM Steel visual refresh: restrained industrial luxury, clean type, deliberate spacing. */
+:root { --bm-metal-line: rgba(185,155,105,.24); --bm-metal-wash: rgba(185,155,105,.075); }
+body:not(.theme-light):not(.theme-sapphire):not(.theme-emerald):not(.theme-amethyst) { background-image: radial-gradient(ellipse at 12% 0%, rgba(180,148,95,.09), transparent 34%), radial-gradient(ellipse at 90% 18%, rgba(93,112,132,.09), transparent 30%), linear-gradient(180deg, #101214 0%, #141619 48%, #101214 100%); background-attachment: fixed; }
+header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.sidebar { background:rgba(18,20,22,.96); border-right:1px solid var(--bm-metal-line); box-shadow:18px 0 60px rgba(0,0,0,.22); }
+.logo-emblem { border-radius:10px !important; box-shadow:none !important; background:linear-gradient(145deg,#d3bb8a,#9b7945) !important; color:#171717 !important; font-weight:800; letter-spacing:-.05em; }
+.section-title, .admin-title, .cart-title { letter-spacing:-.035em; }
+.section-header { padding-top:clamp(24px,4vw,44px); }
+.products { gap:clamp(18px,2.4vw,30px); }
+.card.glass-panel { border:1px solid rgba(255,255,255,.09); background:linear-gradient(160deg,rgba(34,37,40,.96),rgba(23,25,27,.98)); box-shadow:0 12px 36px rgba(0,0,0,.16); }
+.card { border-radius:18px !important; transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease !important; }
+.card:hover { transform:translateY(-4px) !important; border-color:rgba(194,164,111,.52) !important; box-shadow:0 18px 44px rgba(0,0,0,.24) !important; }
+.card-img-wrap { background:linear-gradient(135deg,rgba(255,255,255,.035),rgba(255,255,255,.012)) !important; }
+.card-body { padding:clamp(18px,2vw,26px) !important; border-top:1px solid rgba(255,255,255,.075) !important; }
+.card-category { letter-spacing:1.8px !important; text-shadow:none !important; opacity:.9; }
+.card-name { letter-spacing:-.02em; line-height:1.28 !important; }
+.card-price .val { font-weight:500 !important; letter-spacing:-.035em; }
+.card-badge { border:1px solid rgba(194,164,111,.24); border-radius:7px !important; letter-spacing:1.1px !important; }
+.add-btn { border-radius:12px !important; transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease !important; }
+.add-btn:hover { transform:translateY(-2px) !important; }
+.btn, .checkout-btn, .cart-fab { border-radius:10px !important; letter-spacing:.045em; transition:transform .2s ease,background .2s ease,border-color .2s ease !important; }
+.btn:hover, .checkout-btn:hover { transform:translateY(-1px); }
+.search-bar { border-radius:12px !important; box-shadow:none !important; }
+.glass-panel:not(.card) { border-color:rgba(255,255,255,.10); }
+.admin-header, .cart-header { border-bottom:1px solid var(--bm-metal-line); }
+.field-input { border-radius:10px !important; }
+.sidebar-categories a, .sidebar-categories button { border-radius:8px; transition:background .18s ease,color .18s ease; }
+.sidebar-categories a:hover, .sidebar-categories button:hover { background:var(--bm-metal-wash); }
+@media (prefers-reduced-motion: reduce) {
+  .card, .btn, .add-btn, .sidebar-categories a, .sidebar-categories button { transition:none !important; }
+}
+
+/* Keep the industrial visual system comfortable on small screens. */
+@media (max-width:900px) { .products { gap:16px; padding-inline:18px; } .section-header { padding-inline:18px; } .admin-body { gap:14px; } }
+@media (max-width:600px) { .products { grid-template-columns:minmax(0,1fr); padding-inline:14px; gap:16px; } .card-body { padding:18px !important; } .card-name { margin-bottom:18px !important; } .section-header { padding-inline:14px; } }
+
+
+.sidebar-categories[data-admin-hint="true"]::after { content:"ADMIN  ·  HOLD A CATEGORY TO DELETE"; display:block; margin:18px 10px 6px; padding-top:12px; border-top:1px solid var(--bm-metal-line); color:var(--text-muted); font-size:9px; line-height:1.6; letter-spacing:1.1px; }
+.sidebar-categories a[data-category-type="main"], .sidebar-categories a[data-category-type="subcategory"] { user-select:none; -webkit-user-select:none; touch-action:pan-y; }
+
+
+    /* Card alignment refinement: consistent media area, card height, and aligned footers. */
+    .products { align-items: stretch; }
+    .products > .card { height: 100%; min-width: 0; }
+    .card-img-wrap {
+      flex: 0 0 clamp(220px, 25vw, 290px);
+      height: clamp(220px, 25vw, 290px);
+      min-height: 0;
+      aspect-ratio: auto;
+      padding: 18px;
+    }
+    .card-img-wrap > img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      flex: 0 1 auto;
+    }
+    .card-body { flex: 1 1 auto; min-width: 0; }
+    .card-category {
+      min-height: 2.6em;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
+    .card-name {
+      min-height: 3.9em;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      margin-bottom: 22px;
+    }
+    .card-footer { min-height: 58px; align-items: center; }
+    .card-price { min-width: 0; }
+    .card-price .val { overflow-wrap: anywhere; }
+    @media (max-width: 600px) {
+      .card-img-wrap {
+        flex-basis: 220px;
+        height: 220px;
+        padding: 14px;
+      }
+      .card-body { padding: 22px; }
+      .card-name { min-height: 3.9em; }
+    }
+
+  
+    /* Mobile navigation fix: keep a visible, tappable menu control in the sticky header. */
+    @media (max-width: 900px) {
+      header {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        flex-direction: initial;
+        align-items: center;
+        justify-content: initial;
+        gap: 10px;
+        height: auto;
+        min-height: 68px;
+        padding: 10px 14px;
+      }
+      .menu-toggle {
+        display: inline-flex !important;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--glass-border-light);
+        border-radius: var(--radius-md);
+        background: var(--glass-surface);
+        color: var(--text);
+        font-family: Arial, sans-serif;
+        font-size: 25px;
+        line-height: 1;
+        cursor: pointer;
+        position: relative;
+        z-index: 110;
+        touch-action: manipulation;
+      }
+      .logo-group { min-width: 0; gap: 8px; }
+      .logo-emblem { flex: 0 0 auto; }
+      .logo-text { min-width: 0; }
+      .logo-main {
+        font-size: clamp(11px, 3.1vw, 17px);
+        letter-spacing: clamp(0px, .25vw, 1px);
+        white-space: nowrap;
+      }
+      .logo-sub { font-size: 9px; letter-spacing: clamp(1px, .35vw, 2px); }
+      .header-right {
+        width: auto;
+        min-width: 0;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+      }
+      #authArea { gap: 6px; }
+      #authArea .btn { min-height: 38px; padding: 8px 10px; letter-spacing: .5px; font-size: 10px; }
+      .theme-cycler { width: 38px; height: 38px; flex: 0 0 38px; }
+      .sidebar { z-index: 1200; }
+    }
+    @media (max-width: 380px) {
+      header { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 7px; padding: 9px 10px; }
+      .menu-toggle { width: 38px; height: 40px; flex-basis: 38px; }
+      .logo-emblem { width: 32px; height: 32px; font-size: 14px; }
+      .logo-group { gap: 6px; }
+      .logo-main { font-size: 10.5px; letter-spacing: 0; }
+      .logo-sub { font-size: 8px; letter-spacing: 1px; }
+      .header-right { gap: 5px; }
+      #authArea .btn { padding: 7px 8px; font-size: 9px; }
+      .theme-cycler { width: 34px; height: 34px; flex-basis: 34px; }
+    }
+
+  </style>
 </head>
 <body>
 
@@ -447,7 +605,7 @@
 </div>
 
 <header>
-  <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+  <button class="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Open navigation menu" aria-controls="sidebar">☰</button>
   <div class="logo-group" onclick="window.scrollTo(0,0)">
     <div class="logo-emblem">BM</div>
     <div class="logo-text">
@@ -620,7 +778,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -743,6 +901,7 @@ onAuthStateChanged(auth, (u) => {
     authArea.innerHTML = `<button class="btn btn-primary specular-sweep" onclick="login()">Sign In</button>`;
     document.getElementById('adminPanel').style.display = 'none';
   }
+  renderCategories();
   if (allProducts.length > 0) display(allProducts);
 });
 
@@ -779,10 +938,13 @@ function getCategory(name) {
   return 'Architectural Fitting';
 }
 
+function escapeCategoryHtml(value) {
+  return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function buildCategoryList() {
   const names = new Set();
-  allProducts.forEach(p => { const name = (p.category || getCategory(p.name)).trim(); if (name) names.add(name); });
-  const merged = allCategories.map(cat => ({ ...cat, id: normalizeCategory(cat.name) }));
+  allProducts.forEach(p => { if (p.categoryRemoved) return; const name = (p.category || getCategory(p.name)).trim(); if (name) names.add(name); });
+  const merged = allCategories.map(cat => ({ ...cat, id: cat.id || normalizeCategory(cat.name) }));
   Array.from(names).sort((a,b)=>a.localeCompare(b)).forEach(name => {
     if (!merged.some(cat => !cat.parentCategory && cat.name.toLowerCase() === name.toLowerCase())) merged.push({ id: normalizeCategory(name), name });
   });
@@ -795,11 +957,16 @@ function renderCategories() {
   const adminCategoryList = document.getElementById('adminCategoryList');
   const mainCats = buildCategoryList().slice(1).filter(cat => !cat.parentCategory);
   const subs = allCategories.filter(cat => cat.parentCategory);
-  if (categoryList) categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep">All Categories</a>` + mainCats.map(cat =>
-    `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep">${cat.name}</a>` +
-    subs.filter(sub => sub.parentCategory.toLowerCase() === cat.name.toLowerCase()).map(sub =>
-      `<a href="products.html?subcategory=${encodeURIComponent(normalizeCategory(sub.name))}" class="specular-sweep" style="padding-left:28px;font-size:12px;">↳ ${sub.name}</a>`).join('')
-  ).join('');
+  if (categoryList) {
+    categoryList.dataset.adminHint = user && isAdminEmail(user.email) ? 'true' : 'false';
+    categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep" data-category-type="all">All Categories</a>` + mainCats.map(cat => {
+      const stored = allCategories.find(item => !item.parentCategory && item.name.toLowerCase() === cat.name.toLowerCase());
+      return `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep" data-category-type="main" data-category-id="${stored?.id || ''}" data-category-name="${escapeCategoryHtml(cat.name)}">${escapeCategoryHtml(cat.name)}</a>` +
+      subs.filter(sub => sub.parentCategory.toLowerCase() === cat.name.toLowerCase()).map(sub =>
+        `<a href="products.html?subcategory=${encodeURIComponent(normalizeCategory(sub.name))}" class="specular-sweep" style="padding-left:28px;font-size:12px;" data-category-type="subcategory" data-category-id="${sub.id || ''}" data-category-name="${escapeCategoryHtml(sub.name)}">↳ ${escapeCategoryHtml(sub.name)}</a>`).join('');
+    }).join('');
+    bindSidebarCategoryLongPress();
+  }
   if (categorySelect) {
     const current = categorySelect.value;
     categorySelect.innerHTML = `<option value="">Uncategorized</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
@@ -811,9 +978,33 @@ function renderCategories() {
     parentSelect.innerHTML = `<option value="">Choose main category</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
     if (mainCats.some(cat=>cat.name===current)) parentSelect.value=current;
   }
-  if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat =>
-    `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') :
-    '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+  if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat => `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${escapeCategoryHtml(cat.name)} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}', '${cat.parentCategory ? 'subcategory' : 'main'}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+
+}
+function bindSidebarCategoryLongPress() {
+  const container = document.getElementById('categoryList');
+  if (!container || container.dataset.longPressBound === 'true') return;
+  container.dataset.longPressBound = 'true';
+  container.addEventListener('pointerdown', event => {
+    const item = event.target.closest('[data-category-type="main"],[data-category-type="subcategory"]');
+    if (!item || !user || !isAdminEmail(user.email) || event.button !== 0) return;
+    let timer;
+    timer = setTimeout(() => {
+      item.dataset.longPressTriggered = 'true';
+      window.deleteCategory(item.dataset.categoryId || '', item.dataset.categoryName || item.textContent.trim().replace(/^↳\s*/, ''), item.dataset.categoryType);
+    }, 700);
+    const clear = () => { clearTimeout(timer); item.removeEventListener('pointerup', clear); item.removeEventListener('pointerleave', clear); item.removeEventListener('pointercancel', clear); };
+    item.addEventListener('pointerup', clear, { once:true });
+    item.addEventListener('pointerleave', clear, { once:true });
+    item.addEventListener('pointercancel', clear, { once:true });
+    item.addEventListener('click', clickEvent => {
+      if (item.dataset.longPressTriggered === 'true') {
+        clickEvent.preventDefault(); clickEvent.stopImmediatePropagation();
+        delete item.dataset.longPressTriggered;
+      }
+    }, { capture:true, once:true });
+    item.addEventListener('contextmenu', e => { if (user && isAdminEmail(user.email)) e.preventDefault(); });
+  });
 }
 function updateSubcategoryOptions(selectedValue = '') {
   const select = document.getElementById('productSubcategory');
@@ -850,13 +1041,40 @@ window.createSubcategory = async () => {
   try { await addDoc(collection(db,'categories'),{name,parentCategory,isSubcategory:true,createdAt:new Date()}); document.getElementById('newSubcategoryName').value=''; showToast('Subcategory created.'); await loadCategories(); }
   catch(error) { showToast('Failed to create subcategory.'); }
 };
-window.deleteCategory = async (categoryId, categoryName) => {
+window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') => {
   if (!user || !isAdminEmail(user.email)) return;
-  if (!confirm(`Permanently delete category "${categoryName}"?`)) return;
-  try { await deleteDoc(doc(db, 'categories', categoryId)); showToast('Category removed.'); await loadCategories(); } 
-  catch (error) { showToast('Failed to delete category.'); }
+  const isSubcategory = categoryType === 'subcategory';
+  const prompt = isSubcategory
+    ? `Remove subcategory "${categoryName}"? Products in it will stay in the main category.`
+    : `Remove category "${categoryName}" and its subcategories? Products will remain in the catalogue as uncategorized.`;
+  if (!confirm(prompt)) return;
+  try {
+    const parentName = isSubcategory ? (allCategories.find(cat => cat.id === categoryId)?.parentCategory || '') : '';
+    const affected = allProducts.filter(product => isSubcategory
+      ? (product.category || '').toLowerCase() === parentName.toLowerCase() && (product.subcategory || '').toLowerCase() === categoryName.toLowerCase()
+      : !product.categoryRemoved && (product.category || getCategory(product.name)).toLowerCase() === categoryName.toLowerCase());
+    for (let start = 0; start < affected.length; start += 400) {
+      const batch = writeBatch(db);
+      affected.slice(start, start + 400).forEach(product => {
+        const ref = doc(db, 'products', product.id);
+        if (isSubcategory) batch.update(ref, { subcategory: '' });
+        else batch.update(ref, { category: '', subcategory: '', categoryRemoved: true });
+      });
+      await batch.commit();
+    }
+    const categoryDocs = isSubcategory
+      ? allCategories.filter(cat => cat.id === categoryId)
+      : allCategories.filter(cat => cat.id === categoryId || (cat.parentCategory || '').toLowerCase() === categoryName.toLowerCase());
+    for (const cat of categoryDocs) await deleteDoc(doc(db, 'categories', cat.id));
+    allProducts = allProducts.map(product => affected.some(item => item.id === product.id)
+      ? (isSubcategory ? { ...product, subcategory: '' } : { ...product, category: '', subcategory: '', categoryRemoved: true })
+      : product);
+    showToast(isSubcategory ? 'Subcategory removed.' : 'Category and subcategories removed.');
+    if (activeCategory === normalizeCategory(categoryName) || (!isSubcategory && allCategories.some(cat => cat.parentCategory && cat.parentCategory.toLowerCase() === categoryName.toLowerCase() && activeCategory === normalizeCategory(cat.name)))) activeCategory = 'all';
+    await loadCategories();
+    display(allProducts);
+  } catch (error) { showToast('Failed to delete category.'); }
 };
-
 async function loadProducts() {
   try {
     const snap = await getDocs(collection(db, 'products'));
@@ -873,7 +1091,7 @@ function display(list) {
   const isAdmin = isAdminEmail(user?.email);
   
   el.innerHTML = list.map((p, i) => {
-    const categoryLabel = [p.category || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ');
+    const categoryLabel = p.categoryRemoved ? 'Uncategorized' : [p.category || getCategory(p.name), p.subcategory].filter(Boolean).join(' / ');
     const imgSrc = p.imageBase64 || p.imageUrl || getImage(p.name);
     
     // Safely encode product properties for HTML injection
@@ -994,7 +1212,7 @@ window.saveProduct = async () => {
   const priceOnRequest = document.getElementById('priceOnRequest')?.checked || false;
   if (!name || (!priceOnRequest && (!price || !Number.isFinite(Number(price)) || Number(price) < 0))) { showToast('Enter a product name and a valid price, or choose On Request.'); return; }
   try {
-    const productData = { name, category, subcategory, priceOnRequest };
+    const productData = { name, category, subcategory, priceOnRequest, categoryRemoved: false };
     if (!priceOnRequest) productData.price = Number(price);
     if (productBase64Image) productData.imageBase64 = productBase64Image;
 
