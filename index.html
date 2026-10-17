@@ -450,6 +450,10 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
 @media (max-width:900px) { .products { gap:16px; padding-inline:18px; } .section-header { padding-inline:18px; } .admin-body { gap:14px; } }
 @media (max-width:600px) { .products { grid-template-columns:minmax(0,1fr); padding-inline:14px; gap:16px; } .card-body { padding:18px !important; } .card-name { margin-bottom:18px !important; } .section-header { padding-inline:14px; } }
 
+
+.sidebar-categories[data-admin-hint="true"]::after { content:"ADMIN  ·  HOLD A CATEGORY TO DELETE"; display:block; margin:18px 10px 6px; padding-top:12px; border-top:1px solid var(--bm-metal-line); color:var(--text-muted); font-size:9px; line-height:1.6; letter-spacing:1.1px; }
+.sidebar-categories a[data-category-type="main"], .sidebar-categories a[data-category-type="subcategory"] { user-select:none; -webkit-user-select:none; touch-action:pan-y; }
+
 </style>
 </head>
 <body>
@@ -780,6 +784,7 @@ onAuthStateChanged(auth, (u) => {
     authArea.innerHTML = `<button class="btn btn-primary specular-sweep" onclick="login()">Sign In</button>`;
     document.getElementById('adminPanel').style.display = 'none';
   }
+  renderCategories();
   if (allProducts.length > 0) display(allProducts);
 });
 
@@ -836,6 +841,7 @@ function renderCategories() {
   const mainCats = buildCategoryList().slice(1).filter(cat => !cat.parentCategory);
   const subs = allCategories.filter(cat => cat.parentCategory);
   if (categoryList) {
+    categoryList.dataset.adminHint = user && isAdminEmail(user.email) ? 'true' : 'false';
     categoryList.innerHTML = `<a href="products.html?category=all" class="specular-sweep" data-category-type="all">All Categories</a>` + mainCats.map(cat => {
       const stored = allCategories.find(item => !item.parentCategory && item.name.toLowerCase() === cat.name.toLowerCase());
       return `<a href="products.html?category=${encodeURIComponent(normalizeCategory(cat.name))}" class="specular-sweep" data-category-type="main" data-category-id="${stored?.id || ''}" data-category-name="${escapeCategoryHtml(cat.name)}">${escapeCategoryHtml(cat.name)}</a>` +
@@ -855,7 +861,7 @@ function renderCategories() {
     parentSelect.innerHTML = `<option value="">Choose main category</option>${mainCats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('')}`;
     if (mainCats.some(cat=>cat.name===current)) parentSelect.value=current;
   }
-  if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat =>
+  if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat => `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${escapeCategoryHtml(cat.name)} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}', '${cat.parentCategory ? 'subcategory' : 'main'}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
     `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') :
     '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
 }
@@ -948,6 +954,7 @@ window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') 
       ? (isSubcategory ? { ...product, subcategory: '' } : { ...product, category: '', subcategory: '', categoryRemoved: true })
       : product);
     showToast(isSubcategory ? 'Subcategory removed.' : 'Category and subcategories removed.');
+    if (activeCategory === normalizeCategory(categoryName)) activeCategory = 'all';
     await loadCategories();
     display(allProducts);
   } catch (error) { showToast('Failed to delete category.'); }
