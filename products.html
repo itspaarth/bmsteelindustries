@@ -579,6 +579,15 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
     </div>
   </div>
 
+  <div id="bulkPriceToolbar" class="bulk-toolbar glass-panel admin-price-toolbar" style="display:none;" role="region" aria-label="Bulk price editor">
+    <div class="bulk-toolbar-copy"><strong id="selectedPriceProductCount">0 products selected for price edit</strong><br><span id="bulkPriceSourceLabel">Select products that share the same current price.</span></div>
+    <div class="bulk-toolbar-actions">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">New price (₹)<input id="bulkNewPrice" class="field-input" type="number" min="0" step="0.01" placeholder="Enter new price" style="width:180px;" oninput="updateBulkPriceSelectionUI()"></label>
+      <button class="btn btn-primary" id="applyBulkPriceBtn" type="button" onclick="applyBulkPriceUpdate()" disabled>Update selected prices</button>
+      <button class="btn btn-ghost" type="button" onclick="clearBulkPriceSelection()">Clear</button>
+    </div>
+  </div>
+
   <div class="products" id="products">
     <div class="loading">
       <div class="spinner"></div>
@@ -764,6 +773,7 @@ onAuthStateChanged(auth, (u) => {
     document.getElementById('adminPanel').style.display = 'none';
     document.getElementById('bulkImportPanel').style.display = 'none';
   }
+  updateBulkPriceToolbarVisibility();
   if (allProducts.length > 0) display(allProducts);
 });
 
@@ -959,7 +969,8 @@ function display(list) {
     <div class="card glass-panel specular-sweep scroll-reveal">
       <div class="card-img-wrap">
         <div class="card-badge">${categoryLabel.split(' ')[0]}</div>
-        <input class="card-selection" type="checkbox" aria-label="Select ${p.name.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" title="Select product" ${selectedProductIds.has(p.id) ? 'checked' : ''} onchange="toggleProductSelection('${p.id}', this.checked)">
+        <input class="card-selection" type="checkbox" aria-label="Select ${p.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" title="Select product for basket" ${selectedProductIds.has(p.id)?'checked':''} onchange="toggleProductSelection('${p.id}',this.checked)">
+        ${isAdmin ? `<input class="bulk-price-selection" type="checkbox" aria-label="Select ${p.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;')} for bulk price editing" title="Select for bulk price editing" ${selectedPriceProductIds.has(p.id)?'checked':''} onchange="toggleBulkPriceSelection('${p.id}',this.checked)">` : ''}
         ${isAdmin ? `
           <button class="admin-edit-btn" onclick='editProduct("${encodedP}")' title="Edit Item">✎</button>
           <button class="admin-delete-btn" onclick='confirmDelete("${p.id}", "${p.name.replace(/'/g, "\\'")}")' title="Remove Item">✕</button>
@@ -986,6 +997,7 @@ ${p.priceOnRequest ? `
   }).join('');
   
   updateSelectedProductCount();
+  updateBulkPriceSelectionUI();
   observeElements(); 
 }
 
@@ -999,6 +1011,99 @@ function updateSelectedProductCount() {
   const target = document.getElementById('selectedProductCount');
   if (target) target.textContent = count + (count === 1 ? ' product selected' : ' products selected');
 }
+
+window.toggleBulkPriceSelection = (id, checked) => {
+  const product = allProducts.find(item => item.id === id);
+  if (!product) return;
+  if (checked) {
+    if (product.priceOnRequest || !Number.isFinite(Number(product.price))) {
+      showToast('Bulk price editing requires products with the same numeric price.');
+      const box = document.querySelector(`.bulk-price-selection[onchange*="${id}"]`);
+      if (box) box.checked = false;
+      return;
+    }
+    const price = Number(product.price);
+    if (bulkPriceSourcePrice !== null && price !== bulkPriceSourcePrice) {
+      showToast('Select products with the same current price.');
+      const box = document.querySelector(`.bulk-price-selection[onchange*="${id}"]`);
+      if (box) box.checked = false;
+      return;
+    }
+    bulkPriceSourcePrice = price;
+    selectedPriceProductIds.add(id);
+  } else {
+    selectedPriceProductIds.delete(id);
+    if (!selectedPriceProductIds.size) bulkPriceSourcePrice = null;
+    else {
+      const first = allProducts.find(item => selectedPriceProductIds.has(item.id));
+      bulkPriceSourcePrice = first ? Number(first.price) : null;
+    }
+  }
+  updateBulkPriceSelectionUI();
+};
+
+function updateBulkPriceToolbarVisibility() {
+  const toolbar = document.getElementById('bulkPriceToolbar');
+  if (toolbar) toolbar.style.display = user && isAdminEmail(user.email) ? 'flex' : 'none';
+  updateBulkPriceSelectionUI();
+}
+
+function updateBulkPriceSelectionUI() {
+  const count = selectedPriceProductIds.size;
+  const countLabel = document.getElementById('selectedPriceProductCount');
+  const sourceLabel = document.getElementById('bulkPriceSourceLabel');
+  const applyButton = document.getElementById('applyBulkPriceBtn');
+  const toolbar = document.getElementById('bulkPriceToolbar');
+  if (countLabel) countLabel.textContent = count + (count === 1 ? ' product selected for price edit' : ' products selected for price edit');
+  if (sourceLabel) sourceLabel.textContent = count && bulkPriceSourcePrice !== null
+    ? 'Current price for all selected items: ₹' + bulkPriceSourcePrice.toLocaleString('en-IN')
+    : 'Select products that share the same current price.';
+  const input = document.getElementById('bulkNewPrice');
+  if (applyButton) applyButton.disabled = count === 0 || !input || input.value.trim() === '' || !Number.isFinite(Number(input.value)) || Number(input.value) < 0;
+  if (toolbar) toolbar.style.display = user && isAdminEmail(user.email) ? 'flex' : 'none';
+}
+
+window.clearBulkPriceSelection = () => {
+  selectedPriceProductIds.clear();
+  bulkPriceSourcePrice = null;
+  document.querySelectorAll('.bulk-price-selection').forEach(input => { input.checked = false; });
+  const input = document.getElementById('bulkNewPrice');
+  if (input) input.value = '';
+  updateBulkPriceSelectionUI();
+};
+
+window.applyBulkPriceUpdate = async () => {
+  if (!user || !isAdminEmail(user.email)) { showToast('Admin authorization required.'); return; }
+  const newPriceText = document.getElementById('bulkNewPrice').value.trim();
+  const newPrice = Number(newPriceText);
+  if (!selectedPriceProductIds.size || !newPriceText || !Number.isFinite(newPrice) || newPrice < 0) {
+    showToast('Select same-price products and enter a valid new price.'); return;
+  }
+  const selected = allProducts.filter(product => selectedPriceProductIds.has(product.id));
+  if (!selected.length || selected.some(product => product.priceOnRequest || Number(product.price) !== bulkPriceSourcePrice)) {
+    showToast('The selected products no longer share the same price. Please select them again.');
+    window.clearBulkPriceSelection(); return;
+  }
+  if (!confirm(`Update the price of ${selected.length} products from ₹${bulkPriceSourcePrice.toLocaleString('en-IN')} to ₹${newPrice.toLocaleString('en-IN')}?`)) return;
+  const button = document.getElementById('applyBulkPriceBtn');
+  button.disabled = true;
+  try {
+    for (let start = 0; start < selected.length; start += 400) {
+      const batch = writeBatch(db);
+      selected.slice(start, start + 400).forEach(product => batch.update(doc(db,'products',product.id), { price:newPrice, priceOnRequest:false }));
+      await batch.commit();
+    }
+    const ids = new Set(selected.map(product => product.id));
+    allProducts = allProducts.map(product => ids.has(product.id) ? { ...product, price:newPrice, priceOnRequest:false } : product);
+    window.clearBulkPriceSelection();
+    filterProducts();
+    showToast('Updated prices for ' + selected.length + ' products.');
+  } catch (error) {
+    showToast('Bulk price update failed. Please check the products and try again.');
+  } finally {
+    updateBulkPriceSelectionUI();
+  }
+};
 
 window.clearProductSelection = () => {
   selectedProductIds.clear();
