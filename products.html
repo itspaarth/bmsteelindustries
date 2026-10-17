@@ -666,7 +666,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { initializeFirestore, collection, addDoc, getDocs, getDocsFromServer, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -676,8 +676,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-// Auto-detect long polling for mobile networks that interrupt Firestore streaming.
-const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+const db = getFirestore();
 
 const ADMIN_EMAILS = new Set(["paarthkhera71@gmail.com", "vikaskhera44@gmail.com"].map(email => email.toLowerCase()));
 const isAdminEmail = (email) => ADMIN_EMAILS.has((email || '').toLowerCase());
@@ -915,29 +914,18 @@ async function loadProducts() {
     let snap;
     let serverReadFailed = false;
 
-    // Prefer a server-confirmed result so an empty local cache on a new phone
-    // cannot be mistaken for an actually empty catalogue.
-    try {
-      snap = await getDocsFromServer(collection(db, 'products'));
-    } catch (serverError) {
-      serverReadFailed = true;
-      console.warn('Could not reach Firestore server; trying locally available products.', serverError);
-      snap = await getDocs(collection(db, 'products'));
-    }
-
+    // Prefer a seasync function loadProducts() {
+  const productsEl = document.getElementById('products');
+  try {
+    // Use the same Firestore initialization and read method as the working homepage.
+    const snap = await getDocs(collection(db, 'products'));
     allProducts = snap.docs.map(productDoc => ({ id: productDoc.id, ...productDoc.data() }));
-
-    if (serverReadFailed && allProducts.length === 0) {
-      productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Couldn’t connect to the catalogue</h3><p>Your phone couldn’t reach the product database. Check your internet connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
-      return;
-    }
-
     display(allProducts);
     if (categoryParam || subcategoryParam) filterProducts();
     renderCategories();
   } catch (error) {
     console.error('Unable to load products from Firestore:', error);
-    productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Couldn’t load the catalogue</h3><p>Please check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
+    productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Couldn’t connect to the catalogue</h3><p>Please check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
   }
 }
 window.retryProductLoad = loadProducts;
