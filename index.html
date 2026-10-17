@@ -778,7 +778,7 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, getDocsFromServer, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -1076,13 +1076,30 @@ window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') 
   } catch (error) { showToast('Failed to delete category.'); }
 };
 async function loadProducts() {
+  const productsEl = document.getElementById('products');
   try {
-    const snap = await getDocs(collection(db, 'products'));
-    allProducts = [];
-    snap.forEach(doc => allProducts.push({ id: doc.id, ...doc.data() }));
+    // Read from Firestore's server so a temporary offline/cache state cannot look like an empty catalogue.
+    let snap = await getDocsFromServer(collection(db, 'products'));
+    if (snap.empty) {
+      // Confirm an empty response once before telling customers the collection is empty.
+      await new Promise(resolve => setTimeout(resolve, 650));
+      const confirmSnap = await getDocsFromServer(collection(db, 'products'));
+      if (!confirmSnap.empty) snap = confirmSnap;
+    }
+    allProducts = snap.docs.map(productDoc => ({ id: productDoc.id, ...productDoc.data() }));
     display(allProducts);
-  } catch(e) { document.getElementById('products').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Database Unreachable</h3></div>`; }
+  } catch (error) {
+    console.error('Unable to load product collection from Firestore:', error);
+    if (allProducts.length) {
+      // Preserve the last successfully loaded catalogue if a refresh temporarily fails.
+      display(allProducts);
+      showToast('Could not refresh products. Showing the last loaded collection.');
+    } else {
+      productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>Please check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
+    }
+  }
 }
+window.retryProductLoad = loadProducts;
 
 function display(list) {
   const el = document.getElementById('products');
