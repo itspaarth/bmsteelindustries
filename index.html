@@ -903,6 +903,13 @@ onAuthStateChanged(auth, (u) => {
   }
   renderCategories();
   if (allProducts.length > 0) display(allProducts);
+  // A listener that failed before authentication will not recover by itself.
+  // Reconnect whenever the signed-in identity changes.
+  const nextAuthKey = u ? u.uid : 'anonymous';
+  if (lastProductAuthKey !== nextAuthKey) {
+    lastProductAuthKey = nextAuthKey;
+    if (productsLoadGeneration > 0) loadProducts();
+  }
 });
 
 window.login = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e) { showToast('Sign-in failed.'); } };
@@ -1076,6 +1083,7 @@ window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') 
   } catch (error) { showToast('Failed to delete category.'); }
 };
 let productsUnsubscribe = null;
+let lastProductAuthKey = null;
 let productsLoadGeneration = 0;
 
 function loadProducts() {
@@ -1122,7 +1130,11 @@ function loadProducts() {
         if (typeof window.filterProducts === 'function') window.filterProducts(); else display(allProducts);
         showToast('Connection interrupted. Showing the products already loaded.');
       } else {
-        productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>Check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
+        const permissionDenied = error.code === 'permission-denied';
+        const reason = permissionDenied
+          ? 'Firestore denied product access on this device. The products collection needs public read permission for visitors.'
+          : 'The connection to Firestore failed. Check your connection and try again.';
+        productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>${reason}</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
       }
     }
   );
