@@ -862,8 +862,7 @@ function renderCategories() {
     if (mainCats.some(cat=>cat.name===current)) parentSelect.value=current;
   }
   if (adminCategoryList) adminCategoryList.innerHTML = allCategories.length ? allCategories.map(cat => `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${escapeCategoryHtml(cat.name)} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}', '${cat.parentCategory ? 'subcategory' : 'main'}')">✕</button></span>`).join('') : '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
-    `<span class="admin-chip">${cat.parentCategory ? cat.parentCategory + ' / ' : ''}${cat.name} <button type="button" class="admin-chip-delete" onclick="deleteCategory('${cat.id}', '${cat.name.replace(/'/g, "\\'")}')">✕</button></span>`).join('') :
-    '<div class="admin-hint" style="color:var(--text-muted);font-size:13px;">No categories created yet.</div>';
+
 }
 function bindSidebarCategoryLongPress() {
   const container = document.getElementById('categoryList');
