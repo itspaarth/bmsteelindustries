@@ -1104,16 +1104,82 @@ window.importBulkProducts = async () => {
 };
 
 // Image Upload
-document.getElementById('imageInput').addEventListener('change', function(e) {
+// Compress product photos before saving them in Firestore. Base64 strings are larger
+// than the original file, and Firestore documents have a strict 1 MiB size limit.
+async function compressProductImage(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let scale = Math.min(1, 1200 / img.naturalWidth, 1200 / img.naturalHeight);
+        let result = '';
+        for (let resizeAttempt = 0; resizeAttempt < 8; resizeAttempt++) {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Image compression is not supported by this browser.');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          for (let quality = 0.82; quality >= 0.42; quality -= 0.08) {
+            result = canvas.toDataURL('image/jpeg', quality);
+            if (result.length <= 450 * 1024) {
+              URL.revokeObjectURL(objectUrl);
+              resolve(result);
+              return;
+            }
+          }
+          scale *= 0.78;
+        }
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('This image could not be compressed enough. Please choose a smaller image.'));
+      } catch (error) {
+        URL.revokeObjectURL(objectUrl);
+        reject(error);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('This image file could not be opened.'));
+    };
+    img.src = objectUrl;
+  });
+}
+
+document.getElementById('imageInput').addEventListener('change', async function(e) {
   const file = e.target.files[0];
   const labelText = document.getElementById('imageLabelText');
-  if (!file) { productBase64Image = null; labelText.textContent = "Select file..."; labelText.style.color = "var(--text-muted)"; return; }
-  if (file.size > 800 * 1024) { showToast('File exceeds 800KB limit.'); this.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = function(event) { productBase64Image = event.target.result; labelText.textContent = file.name; labelText.style.color = 'var(--accent)'; };
-  reader.readAsDataURL(file);
+  if (!file) {
+    productBase64Image = null;
+    labelText.textContent = "Select file...";
+    labelText.style.color = "var(--text-muted)";
+    return;
+  }
+  if (!file.type.startsWith('image/')) {
+    showToast('Please choose an image file.');
+    this.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Image must be smaller than 10 MB before compression.');
+    this.value = '';
+    return;
+  }
+  labelText.textContent = 'Optimizing image…';
+  labelText.style.color = 'var(--text-muted)';
+  try {
+    productBase64Image = await compressProductImage(file);
+    labelText.textContent = file.name + ' (optimized)';
+    labelText.style.color = 'var(--accent)';
+  } catch (error) {
+    productBase64Image = null;
+    this.value = '';
+    labelText.textContent = 'Select file...';
+    showToast(error.message || 'Image optimization failed.');
+  }
 });
-
 
 // ── ADMIN EDIT / SAVE PRODUCT LOGIC ──
 function togglePriceOnRequest(isOnRequest) {
