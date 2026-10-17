@@ -956,6 +956,8 @@ function buildCategoryList() {
   return [{id:'all',name:'All Categories'},...merged];
 }
 function renderCategories() {
+  // Keep the sidebar's initial state while Firestore data is still loading.
+  if (allCategories.length === 0 && allProducts.length === 0) return;
   const categoryList=document.getElementById('categoryList'),categorySelect=document.getElementById('productCategory'),parentSelect=document.getElementById('newSubcategoryParent'),adminCategoryList=document.getElementById('adminCategoryList'),filterSelect=document.getElementById('categoryFilterSelect');
   const mainCats=buildCategoryList().slice(1).filter(cat=>!cat.parentCategory),subs=allCategories.filter(cat=>cat.parentCategory);
   if(categoryList){
@@ -1056,7 +1058,9 @@ window.deleteCategory = async (categoryId,categoryName,categoryType='main')=>{
 
 window.filterByCategory = (categoryName) => {
   activeCategory = normalizeCategory(categoryName);
-  renderCategories(); filterProducts(); closeSidebar();
+  renderCategories();
+  if (productsLoaded) filterProducts();
+  closeSidebar();
   const url = new URL(window.location);
   url.searchParams.delete('subcategory');
   if(activeCategory==='all')url.searchParams.delete('category');
@@ -1075,6 +1079,7 @@ window.filterByCategory = (categoryName) => {
 let productsUnsubscribe = null;
 let lastProductAuthKey = null;
 let productsLoadGeneration = 0;
+let productsLoaded = false;
 
 function loadProducts() {
   const productsEl = document.getElementById('products');
@@ -1108,6 +1113,7 @@ function loadProducts() {
         return;
       }
 
+      productsLoaded = true;
       allProducts = incomingProducts;
       if (typeof window.filterProducts === 'function') window.filterProducts();
       else display(allProducts);
@@ -1311,6 +1317,8 @@ loadCategories();
 observeElements(); 
 
 window.filterProducts = () => {
+  // Category clicks may happen before Firestore's first snapshot; don't render a false empty state.
+  if (!productsLoaded) return;
   const q = document.getElementById('search').value.toLowerCase().trim();
   const filtered = allProducts.filter(p => {
     const categoryLabel = normalizeCategory(p.category || getCategory(p.name));
