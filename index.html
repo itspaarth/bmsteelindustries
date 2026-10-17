@@ -778,7 +778,7 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, getDocsFromServer, onSnapshot, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeFirestore, collection, addDoc, getDocs, getDocsFromServer, onSnapshot, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -788,7 +788,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getFirestore();
+// Auto-detect long polling for networks/proxies that disrupt Firestore WebChannel streaming.
+const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 
 const ADMIN_EMAILS = new Set(["paarthkhera71@gmail.com", "vikaskhera44@gmail.com"].map(email => email.toLowerCase()));
 const isAdminEmail = (email) => ADMIN_EMAILS.has((email || '').toLowerCase());
