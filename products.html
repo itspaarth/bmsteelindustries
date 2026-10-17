@@ -436,6 +436,10 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
 .admin-price-toolbar .field-input { min-width:180px; }
 @media (max-width:900px) { .admin-price-toolbar .field-input { min-width:0; } }
 
+
+.sidebar-categories[data-admin-hint="true"]::after { content:"ADMIN  ·  HOLD A CATEGORY TO DELETE"; display:block; margin:18px 10px 6px; padding-top:12px; border-top:1px solid var(--bm-metal-line); color:var(--text-muted); font-size:9px; line-height:1.6; letter-spacing:1.1px; }
+.sidebar-categories button[data-category-type="main"], .sidebar-categories button[data-category-type="subcategory"] { user-select:none; -webkit-user-select:none; touch-action:pan-y; }
+
 </style>
 </head>
 <body>
@@ -774,6 +778,7 @@ onAuthStateChanged(auth, (u) => {
     document.getElementById('bulkImportPanel').style.display = 'none';
   }
   updateBulkPriceToolbarVisibility();
+  renderCategories();
   if (allProducts.length > 0) display(allProducts);
 });
 
@@ -830,6 +835,7 @@ function renderCategories() {
   const categoryList=document.getElementById('categoryList'),categorySelect=document.getElementById('productCategory'),parentSelect=document.getElementById('newSubcategoryParent'),adminCategoryList=document.getElementById('adminCategoryList'),filterSelect=document.getElementById('categoryFilterSelect');
   const mainCats=buildCategoryList().slice(1).filter(cat=>!cat.parentCategory),subs=allCategories.filter(cat=>cat.parentCategory);
   if(categoryList){
+    categoryList.dataset.adminHint=user&&isAdminEmail(user.email)?'true':'false';
     categoryList.innerHTML=`<button class="specular-sweep ${activeCategory==='all'?'active':''}" type="button" data-category-type="all" onclick="filterByCategory('all')">All Categories</button>`+mainCats.map(cat=>{
       const stored=allCategories.find(item=>!item.parentCategory&&item.name.toLowerCase()===cat.name.toLowerCase());
       return `<button class="specular-sweep ${activeCategory===normalizeCategory(cat.name)?'active':''}" type="button" data-category-type="main" data-category-id="${stored?.id||''}" data-category-name="${escapeCategoryHtml(cat.name)}" onclick="filterByCategory('${normalizeCategory(cat.name).replace(/'/g,"\\'")}')">${escapeCategoryHtml(cat.name)}</button>`+
@@ -918,6 +924,7 @@ window.deleteCategory = async (categoryId,categoryName,categoryType='main')=>{
       ? (isSubcategory?{...product,subcategory:''}:{...product,category:'',subcategory:'',categoryRemoved:true})
       : product);
     showToast(isSubcategory?'Subcategory removed.':'Category and subcategories removed.');
+    if (activeCategory === normalizeCategory(categoryName)) activeCategory = 'all';
     await loadCategories();
     filterProducts();
   }catch(error){showToast('Failed to delete category.');}
