@@ -778,7 +778,7 @@ header { border-bottom:1px solid var(--bm-metal-line); background:rgba(16,18,20,
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, getDocsFromServer, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, getDocsFromServer, onSnapshot, doc, deleteDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARLtkOTigXCUi4yhN2WFcGfV-k4bmfdSE",
@@ -1075,38 +1075,57 @@ window.deleteCategory = async (categoryId, categoryName, categoryType = 'main') 
     display(allProducts);
   } catch (error) { showToast('Failed to delete category.'); }
 };
-async function loadProducts() {
+let productsUnsubscribe = null;
+let productsLoadGeneration = 0;
+
+function loadProducts() {
   const productsEl = document.getElementById('products');
-  try {
-    // Prefer a server read so stale local cache data cannot masquerade as the live catalogue.
-    let snap;
-    try {
-      snap = await getDocsFromServer(collection(db, 'products'));
-    } catch (serverError) {
-      console.warn('Firestore server read failed; trying the standard read:', serverError);
-      // Standard getDocs can still return previously cached products when connectivity is intermittent.
-      snap = await getDocs(collection(db, 'products'));
-      if (snap.empty) throw serverError;
-    }
+  const generation = ++productsLoadGeneration;
 
-    if (snap.empty) {
-      // Confirm an empty response once before telling customers the collection is empty.
-      await new Promise(resolve => setTimeout(resolve, 650));
-      const confirmSnap = await getDocsFromServer(collection(db, 'products'));
-      if (!confirmSnap.empty) snap = confirmSnap;
-    }
-
-    allProducts = snap.docs.map(productDoc => ({ id: productDoc.id, ...productDoc.data() }));
-    display(allProducts);
-  } catch (error) {
-    console.error('Unable to load product collection:', error);
-    if (allProducts.length) {
-      display(allProducts);
-      showToast('Could not refresh products. Showing the last loaded collection.');
-    } else {
-      productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>This may be a temporary connection or database-permission issue. Please try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
-    }
+  if (productsUnsubscribe) {
+    productsUnsubscribe();
+    productsUnsubscribe = null;
   }
+
+  if (!allProducts.length) {
+    productsEl.innerHTML = `<div class="loading"><div class="spinner"></div>Loading products…</div>`;
+  }
+
+  // One live Firestore listener is faster and more reliable than repeated one-off reads:
+  // it can render cached products immediately, then automatically sync server changes.
+  productsUnsubscribe = onSnapshot(
+    collection(db, 'products'),
+    { includeMetadataChanges: true },
+    (snapshot) => {
+      if (generation !== productsLoadGeneration) return;
+
+      const incomingProducts = snapshot.docs.map(productDoc => ({
+        id: productDoc.id,
+        ...productDoc.data()
+      }));
+
+      // An empty cache is not proof that the server collection is empty.
+      // Keep the loading/previous state until Firestore confirms the result from the server.
+      if (snapshot.metadata.fromCache && incomingProducts.length === 0 && allProducts.length === 0) {
+        return;
+      }
+
+      allProducts = incomingProducts;
+      if (typeof window.filterProducts === 'function') window.filterProducts();
+      else display(allProducts);
+    },
+    (error) => {
+      if (generation !== productsLoadGeneration) return;
+      console.error('Firestore products listener failed:', error);
+
+      if (allProducts.length > 0) {
+        if (typeof window.filterProducts === 'function') window.filterProducts(); else display(allProducts);
+        showToast('Connection interrupted. Showing the products already loaded.');
+      } else {
+        productsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><h3>Unable to load the collection</h3><p>Check your connection and try again.</p><button class="btn btn-primary" type="button" onclick="retryProductLoad()">Retry</button></div>`;
+      }
+    }
+  );
 }
 window.retryProductLoad = loadProducts;
 
